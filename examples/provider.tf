@@ -1,0 +1,1 @@
+provider "k14s" {}

@@ -1,0 +1,15 @@
+#@ load("@ytt:data", "data")
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ytt-k8s-cm1
+data:
+  cm1.yml: #@ data.values.cm1
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ytt-k8s-cm2
+data:
+  cm2.yml: #@ data.values.cm2
