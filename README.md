@@ -4,7 +4,8 @@
 - [Docs](docs/README.md) with topics about resources and their attributes
 - Refer to [Install doc](docs/install.md) for setup instructions
 
-k14s Terraform provider currently includes:
+k14s Terraform provider currently includes ability to:
 
-- ability to template with [ytt](https://get-ytt.io)
-- ability to deploy K8s resources with [kapp](https://get-kapp.io)
+- template with [ytt](https://get-ytt.io)
+- resolve image digests with [kbld](https://get-kbld.io)
+- deploy k8s resources with [kapp](https://get-kapp.io)

@@ -1,4 +1,4 @@
-package ytt
+package kbld
 
 import (
 	"github.com/hashicorp/terraform/helper/schema"
@@ -7,11 +7,10 @@ import (
 )
 
 const (
-	schemaFilesKey                 = "files"
-	schemaIgnoreUnknownCommentsKey = "ignore_unknown_comments"
-	schemaValuesYAMLKey            = "values_yaml"
-	schemaResultKey                = "result"
-	schemaDebugLogsKey             = "debug_logs"
+	schemaFilesKey      = "files"
+	schemaConfigYAMLKey = "config_yaml"
+	schemaResultKey     = "result"
+	schemaDebugLogsKey  = "debug_logs"
 )
 
 type Resource struct {
@@ -32,15 +31,9 @@ func NewResource(logger logger.Logger) *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-			schemaIgnoreUnknownCommentsKey: {
-				Type:        schema.TypeBool,
-				Description: "Set to ignore unknown comments",
-				Optional:    true,
-				Default:     false,
-			},
-			schemaValuesYAMLKey: {
+			schemaConfigYAMLKey: {
 				Type:        schema.TypeString,
-				Description: "Data values as YAML",
+				Description: "Configuration as YAML",
 				Optional:    true,
 				Sensitive:   true,
 			},
@@ -68,7 +61,7 @@ func (r Resource) Read(d *schema.ResourceData, meta interface{}) error {
 		logger.Debug("started")
 	}
 
-	stdout, _, err := (&Ytt{d}).Template()
+	stdout, _, err := (&Kbld{d}).Template()
 	if err != nil {
 		return err
 	}

@@ -1,4 +1,4 @@
-package ytt
+package kbld
 
 import (
 	"bytes"
@@ -10,11 +10,11 @@ import (
 	"github.com/k14s/terraform-provider-k14s/pkg/schemamisc"
 )
 
-type Ytt struct {
+type Kbld struct {
 	data *schema.ResourceData
 }
 
-func (t *Ytt) Template() (string, string, error) {
+func (t *Kbld) Template() (string, string, error) {
 	args, stdin, err := t.addArgs()
 	if err != nil {
 		return "", "", fmt.Errorf("Building args: %s", err)
@@ -22,7 +22,7 @@ func (t *Ytt) Template() (string, string, error) {
 
 	var stdoutBs, stderrBs bytes.Buffer
 
-	cmd := goexec.Command("ytt", args...)
+	cmd := goexec.Command("kbld", args...)
 	cmd.Stdin = stdin
 	cmd.Stdout = &stdoutBs
 	cmd.Stderr = &stderrBs
@@ -30,13 +30,13 @@ func (t *Ytt) Template() (string, string, error) {
 	err = cmd.Run()
 	if err != nil {
 		stderrStr := stderrBs.String()
-		return "", stderrStr, fmt.Errorf("Executing ytt: %s (stderr: %s)", err, stderrStr)
+		return "", stderrStr, fmt.Errorf("Executing kbld: %s (stderr: %s)", err, stderrStr)
 	}
 
 	return stdoutBs.String(), "", nil
 }
 
-func (t *Ytt) addArgs() ([]string, io.Reader, error) {
+func (t *Kbld) addArgs() ([]string, io.Reader, error) {
 	args := []string{}
 	var stdin io.Reader
 
@@ -47,17 +47,13 @@ func (t *Ytt) addArgs() ([]string, io.Reader, error) {
 		}
 	}
 
-	if t.data.Get(schemaIgnoreUnknownCommentsKey).(bool) {
-		args = append(args, "--ignore-unknown-comments")
-	}
-
-	values := t.data.Get(schemaValuesYAMLKey).(string)
+	values := t.data.Get(schemaConfigYAMLKey).(string)
 	if len(values) > 0 {
 		args = append(args, "-f-")
 
 		values, err := schemamisc.Heredoc{values}.StripIndent()
 		if err != nil {
-			return nil, nil, fmt.Errorf("Formatting %s: %s", schemaValuesYAMLKey, err)
+			return nil, nil, fmt.Errorf("Formatting %s: %s", schemaConfigYAMLKey, err)
 		}
 
 		stdin = bytes.NewReader([]byte(values))
