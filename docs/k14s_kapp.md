@@ -21,10 +21,10 @@ k14s_kapp resource provides ability to manage set of Kubernetes resources.
 
 ```yaml
 data "k14s_kapp" "app2" {
-	app = "app2"
-	namespace = "default"
+  app = "app2"
+  namespace = "default"
 
-	config_yaml = <<EOF
+  config_yaml = <<EOF
     apiVersion: v1
     kind: ConfigMap
     metadata:
@@ -33,6 +33,6 @@ data "k14s_kapp" "app2" {
       data.txt: something
   EOF
 
-	diff_changes = true
+  diff_changes = true
 }
 ```
