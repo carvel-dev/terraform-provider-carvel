@@ -1,5 +1,6 @@
 ## Docs
 
+- [Install](install.md)
 - Data sources
   - [k14s_ytt](k14s_ytt.md)
 - Resources

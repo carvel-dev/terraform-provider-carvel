@@ -7,6 +7,4 @@
 *.tfstate.backup
 
 /terraform-provider-k14s
-/terraform-provider-k14s-darwin-amd64
-/terraform-provider-k14s-linux-amd64
-/terraform-provider-k14s-windows-amd64.exe
+/tmp
