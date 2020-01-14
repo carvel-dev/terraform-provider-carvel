@@ -2,7 +2,7 @@
 
 - Slack: [#k14s in Kubernetes slack](https://slack.kubernetes.io)
 - [Docs](docs/README.md) with topics about resources and their attributes
-- Install: grab prebuilt binaries from the [Releases page](https://github.com/k14s/terraform-provider-k14s/releases).
+- Refer to [Install doc](docs/install.md) for setup instructions
 
 k14s Terraform provider currently includes:
 
