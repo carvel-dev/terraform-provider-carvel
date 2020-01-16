@@ -170,6 +170,16 @@ func (t *Kapp) addDeployArgs() ([]string, io.Reader, error) {
 		}
 	}
 
+	deployOptsRaw := t.data.Get(schemaDeployKey).([]interface{})
+	if len(deployOptsRaw) > 0 {
+		deployOpts := deployOptsRaw[0].(map[string]interface{})
+		if rawOpts, ok := deployOpts[schemaRawOptionsKey]; ok {
+			for _, rawOpt := range rawOpts.([]interface{}) {
+				args = append(args, rawOpt.(string))
+			}
+		}
+	}
+
 	return args, stdin, nil
 }
 
@@ -181,5 +191,16 @@ func (t *Kapp) addDeleteArgs() ([]string, io.Reader, error) {
 		"--yes",
 		"--tty",
 	}
+
+	deleteOptsRaw := t.data.Get(schemaDeleteKey).([]interface{})
+	if len(deleteOptsRaw) > 0 {
+		deleteOpts := deleteOptsRaw[0].(map[string]interface{})
+		if rawOpts, ok := deleteOpts[schemaRawOptionsKey]; ok {
+			for _, rawOpt := range rawOpts.([]interface{}) {
+				args = append(args, rawOpt.(string))
+			}
+		}
+	}
+
 	return args, nil, nil
 }

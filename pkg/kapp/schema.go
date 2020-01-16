@@ -18,6 +18,10 @@ const (
 	schemaChangeDiffKey           = "change_diff"
 
 	schemaDebugLogsKey = "debug_logs"
+
+	schemaDeployKey     = "deploy"
+	schemaDeleteKey     = "delete"
+	schemaRawOptionsKey = "raw_options"
 )
 
 var (
@@ -78,6 +82,46 @@ var (
 			Description: "Enable debug logging",
 			Optional:    true,
 			Default:     false,
+		},
+
+		schemaDeployKey: {
+			Type:        schema.TypeList,
+			Description: "Deploy options",
+			Optional:    true,
+			MinItems:    1,
+			MaxItems:    1,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					schemaRawOptionsKey: {
+						Type:        schema.TypeList,
+						Description: "Raw options given to kapp",
+						Optional:    true,
+						Elem: &schema.Schema{
+							Type: schema.TypeString,
+						},
+					},
+				},
+			},
+		},
+
+		schemaDeleteKey: {
+			Type:        schema.TypeList,
+			Description: "Delete options",
+			Optional:    true,
+			MinItems:    1,
+			MaxItems:    1,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					schemaRawOptionsKey: {
+						Type:        schema.TypeList,
+						Description: "Raw options given to kapp",
+						Optional:    true,
+						Elem: &schema.Schema{
+							Type: schema.TypeString,
+						},
+					},
+				},
+			},
 		},
 	}
 )

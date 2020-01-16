@@ -11,6 +11,10 @@ k14s_kapp resource provides ability to manage set of Kubernetes resources.
 - `diff_changes` (bool; optional) Equivalent to --diff-changes
 - `diff_context` (int; optional) Equivalent to --diff-context
 - `debug_logs` (bool; optional; default=false) Log to /tmp/terraform-provider-k14s.log
+- `deploy` (optional)
+  - `raw_options` (list of strings) Raw options to pass to kapp (e.g. `--wait=false`)
+- `delete` (optional)
+  - `raw_options` (list of strings) Raw options to pass to kapp (e.g. `--wait=false`)
 
 ### Computed Attributes
 
@@ -34,5 +38,25 @@ data "k14s_kapp" "app2" {
   EOF
 
   diff_changes = true
+}
+```
+
+```yaml
+data "k14s_kapp" "app2" {
+  app = "app2"
+  namespace = "default"
+
+  config_yaml = <<EOF
+    apiVersion: v1
+    kind: ConfigMap
+    metadata:
+      name: app2
+    data:
+      data.txt: something
+  EOF
+
+  deploy {
+    raw_options = ["--app-changes-max-to-keep=10"]
+  }
 }
 ```
