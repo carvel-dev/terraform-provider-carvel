@@ -51,7 +51,10 @@ func (r Resource) Read(d *schema.ResourceData, meta interface{}) error {
 	// Updates revision to indicate change
 	_, _, err := (&Kapp{d, logger}).Diff()
 	if err != nil {
-		return err
+		// TODO ignore diffing error since it might
+		// be diffed against invalid old configuration
+		// (eg Ownership error with previously set configuration).
+		// return fmt.Errorf("Reading %s: %s", r.id(d), err)
 	}
 
 	return nil
