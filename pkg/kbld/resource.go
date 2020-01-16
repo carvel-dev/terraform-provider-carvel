@@ -6,51 +6,13 @@ import (
 	"github.com/k14s/terraform-provider-k14s/pkg/schemamisc"
 )
 
-const (
-	schemaFilesKey      = "files"
-	schemaConfigYAMLKey = "config_yaml"
-	schemaResultKey     = "result"
-	schemaDebugLogsKey  = "debug_logs"
-)
-
 type Resource struct {
 	logger logger.Logger
 }
 
 func NewResource(logger logger.Logger) *schema.Resource {
 	res := Resource{logger}
-
-	return &schema.Resource{
-		Read: res.Read,
-		Schema: map[string]*schema.Schema{
-			schemaFilesKey: {
-				Type:        schema.TypeList,
-				Description: "Files",
-				Optional:    true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-			},
-			schemaConfigYAMLKey: {
-				Type:        schema.TypeString,
-				Description: "Configuration as YAML",
-				Optional:    true,
-				Sensitive:   true,
-			},
-			schemaResultKey: {
-				Type:        schema.TypeString,
-				Description: "Result",
-				Computed:    true,
-				Sensitive:   true,
-			},
-			schemaDebugLogsKey: {
-				Type:        schema.TypeBool,
-				Description: "Enable debug logging",
-				Optional:    true,
-				Default:     false,
-			},
-		},
-	}
+	return &schema.Resource{Read: res.Read, Schema: resourceScheme}
 }
 
 func (r Resource) Read(d *schema.ResourceData, meta interface{}) error {
