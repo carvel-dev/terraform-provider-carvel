@@ -34,7 +34,7 @@ func (r Resource) Create(d *schema.ResourceData, meta interface{}) error {
 
 	_, _, err := (&Kapp{d, logger}).Deploy()
 	if err != nil {
-		return err
+		return fmt.Errorf("Creating %s: %s", r.id(d), err)
 	}
 
 	return nil
@@ -71,7 +71,7 @@ func (r Resource) Update(d *schema.ResourceData, meta interface{}) error {
 
 	_, _, err := (&Kapp{d, logger}).Deploy()
 	if err != nil {
-		return err
+		return fmt.Errorf("Updating %s: %s", r.id(d), err)
 	}
 
 	return nil
@@ -84,7 +84,7 @@ func (r Resource) Delete(d *schema.ResourceData, meta interface{}) error {
 
 	_, _, err := (&Kapp{d, logger}).Delete()
 	if err != nil {
-		return err
+		return fmt.Errorf("Deleting %s: %s", r.id(d), err)
 	}
 
 	d.SetId("")
@@ -94,8 +94,13 @@ func (r Resource) Delete(d *schema.ResourceData, meta interface{}) error {
 
 func (r Resource) CustomizeDiff(diff *schema.ResourceDiff, meta interface{}) error {
 	logger := r.newLogger(diff, "customizeDiff")
+
 	_, _, err := (&Kapp{SettableDiff{diff}, logger}).Diff()
-	return err
+	if err != nil {
+		return fmt.Errorf("Customizing diff %s: %s", r.id(diff), err)
+	}
+
+	return nil
 }
 
 func (r Resource) clearDiff(d SettableResourceData) {
