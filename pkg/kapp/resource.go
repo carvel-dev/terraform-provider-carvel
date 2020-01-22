@@ -5,6 +5,7 @@ import (
 
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/k14s/terraform-provider-k14s/pkg/logger"
+	"github.com/k14s/terraform-provider-k14s/pkg/schemamisc"
 )
 
 type Resource struct {
@@ -32,7 +33,7 @@ func (r Resource) Create(d *schema.ResourceData, meta interface{}) error {
 	r.clearDiff(d)
 	defer r.clearDiff(d)
 
-	_, _, err := (&Kapp{d, logger}).Deploy()
+	_, _, err := (&Kapp{d, meta.(schemamisc.Context).Kubeconfig, logger}).Deploy()
 	if err != nil {
 		return fmt.Errorf("Creating %s: %s", r.id(d), err)
 	}
@@ -49,7 +50,7 @@ func (r Resource) Read(d *schema.ResourceData, meta interface{}) error {
 	defer r.clearDiff(d)
 
 	// Updates revision to indicate change
-	_, _, err := (&Kapp{d, logger}).Diff()
+	_, _, err := (&Kapp{d, meta.(schemamisc.Context).Kubeconfig, logger}).Diff()
 	if err != nil {
 		// TODO ignore diffing error since it might
 		// be diffed against invalid old configuration
@@ -69,7 +70,7 @@ func (r Resource) Update(d *schema.ResourceData, meta interface{}) error {
 	r.clearDiff(d)
 	defer r.clearDiff(d)
 
-	_, _, err := (&Kapp{d, logger}).Deploy()
+	_, _, err := (&Kapp{d, meta.(schemamisc.Context).Kubeconfig, logger}).Deploy()
 	if err != nil {
 		return fmt.Errorf("Updating %s: %s", r.id(d), err)
 	}
@@ -82,7 +83,7 @@ func (r Resource) Delete(d *schema.ResourceData, meta interface{}) error {
 
 	r.clearDiff(d)
 
-	_, _, err := (&Kapp{d, logger}).Delete()
+	_, _, err := (&Kapp{d, meta.(schemamisc.Context).Kubeconfig, logger}).Delete()
 	if err != nil {
 		return fmt.Errorf("Deleting %s: %s", r.id(d), err)
 	}
@@ -95,7 +96,7 @@ func (r Resource) Delete(d *schema.ResourceData, meta interface{}) error {
 func (r Resource) CustomizeDiff(diff *schema.ResourceDiff, meta interface{}) error {
 	logger := r.newLogger(diff, "customizeDiff")
 
-	_, _, err := (&Kapp{SettableDiff{diff}, logger}).Diff()
+	_, _, err := (&Kapp{SettableDiff{diff}, meta.(schemamisc.Context).Kubeconfig, logger}).Diff()
 	if err != nil {
 		return fmt.Errorf("Customizing diff %s: %s", r.id(diff), err)
 	}

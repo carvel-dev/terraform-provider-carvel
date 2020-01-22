@@ -6,6 +6,7 @@ import (
 	"github.com/k14s/terraform-provider-k14s/pkg/kapp"
 	"github.com/k14s/terraform-provider-k14s/pkg/kbld"
 	"github.com/k14s/terraform-provider-k14s/pkg/logger"
+	"github.com/k14s/terraform-provider-k14s/pkg/schemamisc"
 	"github.com/k14s/terraform-provider-k14s/pkg/ytt"
 )
 
@@ -24,6 +25,12 @@ func Provider() terraform.ResourceProvider {
 			"k14s_ytt":  schema.DataSourceResourceShim("k14s_ytt", ytt.NewResource(yttLogger)),
 			"k14s_kbld": schema.DataSourceResourceShim("k14s_kbld", kbld.NewResource(kbldLogger)),
 			"k14s_kapp": kapp.NewResource(logger.WithLabel("kapp")),
+		},
+
+		Schema: resourceSchema,
+
+		ConfigureFunc: func(d *schema.ResourceData) (interface{}, error) {
+			return schemamisc.Context{Kubeconfig: Kubeconfig{d}}, nil
 		},
 	}
 }

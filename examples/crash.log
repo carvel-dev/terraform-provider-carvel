@@ -1,0 +1,79 @@
+2020/01/21 16:37:03 [INFO] Terraform version: 0.12.19  
+2020/01/21 16:37:03 [INFO] Go runtime version: go1.12.13
+2020/01/21 16:37:03 [INFO] CLI args: []string{"/usr/local/bin/terraform", "apply"}
+2020/01/21 16:37:03 [DEBUG] Attempting to open CLI config file: /Users/pivotal/.terraformrc
+2020/01/21 16:37:03 [DEBUG] File doesn't exist, but doesn't need to. Ignoring.
+2020/01/21 16:37:03 [DEBUG] checking for credentials in "/Users/pivotal/.terraform.d/plugins"
+2020/01/21 16:37:03 [DEBUG] checking for credentials in "/Users/pivotal/.terraform.d/plugins/darwin_amd64"
+2020/01/21 16:37:03 [INFO] CLI command args: []string{"apply"}
+2020/01/21 16:37:03 [TRACE] Meta.Backend: no config given or present on disk, so returning nil config
+2020/01/21 16:37:03 [TRACE] Meta.Backend: backend has not previously been initialized in this working directory
+2020/01/21 16:37:03 [DEBUG] New state was assigned lineage "fb0d13d2-4dce-70b9-d3cb-2c2cda89c716"
+2020/01/21 16:37:03 [TRACE] Meta.Backend: using default local state only (no backend configuration, and no existing initialized backend)
+2020/01/21 16:37:03 [TRACE] Meta.Backend: instantiated backend of type <nil>
+2020/01/21 16:37:03 [DEBUG] checking for provider in "."
+2020/01/21 16:37:03 [WARN] found legacy provider "terraform-provider-k14s"
+2020/01/21 16:37:03 [DEBUG] checking for provider in "/usr/local/bin"
+2020/01/21 16:37:03 [DEBUG] checking for provider in ".terraform/plugins/darwin_amd64"
+2020/01/21 16:37:03 [DEBUG] checking for provider in "/Users/pivotal/.terraform.d/plugins"
+2020/01/21 16:37:03 [DEBUG] checking for provider in "/Users/pivotal/.terraform.d/plugins/darwin_amd64"
+2020/01/21 16:37:03 [WARN] found legacy provider "terraform-provider-k14s"
+2020/01/21 16:37:03 [DEBUG] found valid plugin: "k14s", "0.0.0", "/Users/pivotal/workspace/ytt-go/src/github.com/k14s/terraform-provider-k14s/examples/terraform-provider-k14s"
+2020/01/21 16:37:03 [DEBUG] checking for provisioner in "."
+2020/01/21 16:37:03 [DEBUG] checking for provisioner in "/usr/local/bin"
+2020/01/21 16:37:03 [DEBUG] checking for provisioner in ".terraform/plugins/darwin_amd64"
+2020/01/21 16:37:03 [DEBUG] checking for provisioner in "/Users/pivotal/.terraform.d/plugins"
+2020/01/21 16:37:03 [DEBUG] checking for provisioner in "/Users/pivotal/.terraform.d/plugins/darwin_amd64"
+2020/01/21 16:37:03 [TRACE] Meta.Backend: backend <nil> does not support operations, so wrapping it in a local backend
+2020/01/21 16:37:03 [INFO] backend/local: starting Apply operation
+2020/01/21 16:37:03 [TRACE] backend/local: requesting state manager for workspace "default"
+2020/01/21 16:37:03 [TRACE] backend/local: state manager for workspace "default" will:
+ - read initial snapshot from terraform.tfstate
+ - write new snapshots to terraform.tfstate
+ - create any backup at terraform.tfstate.backup
+2020/01/21 16:37:03 [TRACE] backend/local: requesting state lock for workspace "default"
+2020/01/21 16:37:03 [TRACE] statemgr.Filesystem: preparing to manage state snapshots at terraform.tfstate
+2020/01/21 16:37:03 [TRACE] statemgr.Filesystem: existing snapshot has lineage "fed20c3c-df03-07e6-32eb-c0ecc9a874ad" serial 66
+2020/01/21 16:37:03 [TRACE] statemgr.Filesystem: locking terraform.tfstate using fcntl flock
+2020/01/21 16:37:03 [TRACE] statemgr.Filesystem: writing lock metadata to .terraform.tfstate.lock.info
+2020/01/21 16:37:03 [TRACE] backend/local: reading remote state for workspace "default"
+2020/01/21 16:37:03 [TRACE] statemgr.Filesystem: reading latest snapshot from terraform.tfstate
+2020/01/21 16:37:03 [TRACE] statemgr.Filesystem: read snapshot with lineage "fed20c3c-df03-07e6-32eb-c0ecc9a874ad" serial 66
+2020/01/21 16:37:03 [TRACE] backend/local: retrieving local state snapshot for workspace "default"
+2020/01/21 16:37:03 [TRACE] backend/local: building context for current working directory
+2020/01/21 16:37:03 [TRACE] terraform.NewContext: starting
+2020/01/21 16:37:03 [TRACE] terraform.NewContext: resolving provider version selections
+2020/01/21 16:37:03 [TRACE] terraform.NewContext: loading provider schemas
+2020/01/21 16:37:03 [TRACE] LoadSchemas: retrieving schema for provider type "k14s"
+2020-01-21T16:37:03.664-0500 [INFO]  plugin: configuring client automatic mTLS
+2020-01-21T16:37:03.773-0500 [DEBUG] plugin: starting plugin: path=/Users/pivotal/workspace/ytt-go/src/github.com/k14s/terraform-provider-k14s/examples/terraform-provider-k14s args=[/Users/pivotal/workspace/ytt-go/src/github.com/k14s/terraform-provider-k14s/examples/terraform-provider-k14s]
+2020-01-21T16:37:03.790-0500 [DEBUG] plugin: plugin started: path=/Users/pivotal/workspace/ytt-go/src/github.com/k14s/terraform-provider-k14s/examples/terraform-provider-k14s pid=76113
+2020-01-21T16:37:03.798-0500 [DEBUG] plugin: waiting for RPC address: path=/Users/pivotal/workspace/ytt-go/src/github.com/k14s/terraform-provider-k14s/examples/terraform-provider-k14s
+2020-01-21T16:37:03.863-0500 [INFO]  plugin.terraform-provider-k14s: configuring server automatic mTLS: timestamp=2020-01-21T16:37:03.860-0500
+2020-01-21T16:37:03.949-0500 [DEBUG] plugin.terraform-provider-k14s: plugin address: address=/var/folders/qx/dfk6jyx17y54jk5cw7x177gw0000gn/T/plugin363832852 network=unix timestamp=2020-01-21T16:37:03.949-0500
+2020-01-21T16:37:03.949-0500 [DEBUG] plugin: using plugin: version=5
+2020/01/21 16:37:03 [TRACE] GRPCProvider: GetSchema
+2020-01-21T16:37:04.026-0500 [DEBUG] plugin.terraform-provider-k14s: panic: invalid Schema.Elem map[string]*schema.Schema{"kubeconfig":*schema.Schema{Type:5, ConfigMode:0, Optional:true, Required:false, DiffSuppressFunc:(schema.SchemaDiffSuppressFunc)(nil), Default:interface {}(nil), DefaultFunc:(schema.SchemaDefaultFunc)(nil), Description:"kubeconfig used by kapp", InputDefault:"", Computed:false, ForceNew:false, StateFunc:(schema.SchemaStateFunc)(nil), Elem:(*schema.Resource)(0xc000192a00), MaxItems:1, MinItems:0, PromoteSingle:false, Set:(schema.SchemaSetFunc)(nil), ComputedWhen:[]string(nil), ConflictsWith:[]string(nil), Deprecated:"", Removed:"", ValidateFunc:(schema.SchemaValidateFunc)(nil), Sensitive:false}, "kubeconfig_yaml":*schema.Schema{Type:4, ConfigMode:0, Optional:true, Required:false, DiffSuppressFunc:(schema.SchemaDiffSuppressFunc)(nil), Default:interface {}(nil), DefaultFunc:(schema.SchemaDefaultFunc)(nil), Description:"kubeconfig as YAML", InputDefault:"", Computed:false, ForceNew:false, StateFunc:(schema.SchemaStateFunc)(nil), Elem:interface {}(nil), MaxItems:0, MinItems:0, PromoteSingle:false, Set:(schema.SchemaSetFunc)(nil), ComputedWhen:[]string(nil), ConflictsWith:[]string(nil), Deprecated:"", Removed:"", ValidateFunc:(schema.SchemaValidateFunc)(nil), Sensitive:false}}; need *Schema or *Resource
+2020-01-21T16:37:04.026-0500 [DEBUG] plugin.terraform-provider-k14s: 
+2020-01-21T16:37:04.026-0500 [DEBUG] plugin.terraform-provider-k14s: goroutine 38 [running]:
+2020-01-21T16:37:04.026-0500 [DEBUG] plugin.terraform-provider-k14s: github.com/hashicorp/terraform/helper/schema.schemaMap.CoreConfigSchema(0xc0004c5ec0, 0xc000176370)
+2020-01-21T16:37:04.026-0500 [DEBUG] plugin.terraform-provider-k14s: 	/Users/pivotal/workspace/ytt-go/pkg/mod/github.com/hashicorp/terraform@v0.12.19/helper/schema/core_schema.go:76 +0x642
+2020-01-21T16:37:04.026-0500 [DEBUG] plugin.terraform-provider-k14s: github.com/hashicorp/terraform/helper/plugin.(*GRPCProviderServer).getProviderSchemaBlock(...)
+2020-01-21T16:37:04.026-0500 [DEBUG] plugin.terraform-provider-k14s: 	/Users/pivotal/workspace/ytt-go/pkg/mod/github.com/hashicorp/terraform@v0.12.19/helper/plugin/grpc_provider.go:76
+2020-01-21T16:37:04.026-0500 [DEBUG] plugin.terraform-provider-k14s: github.com/hashicorp/terraform/helper/plugin.(*GRPCProviderServer).GetSchema(0xc00014e4d8, 0x1f10b00, 0xc0003d0360, 0xc0004c9060, 0xc00014e4d8, 0xc0003d0360, 0xc000069a58)
+2020-01-21T16:37:04.026-0500 [DEBUG] plugin.terraform-provider-k14s: 	/Users/pivotal/workspace/ytt-go/pkg/mod/github.com/hashicorp/terraform@v0.12.19/helper/plugin/grpc_provider.go:55 +0xa0
+2020-01-21T16:37:04.026-0500 [DEBUG] plugin.terraform-provider-k14s: github.com/hashicorp/terraform/internal/tfplugin5._Provider_GetSchema_Handler(0x1c3dd40, 0xc00014e4d8, 0x1f10b00, 0xc0003d0360, 0xc0001761e0, 0x0, 0x1f10b00, 0xc0003d0360, 0x0, 0x0)
+2020-01-21T16:37:04.026-0500 [DEBUG] plugin.terraform-provider-k14s: 	/Users/pivotal/workspace/ytt-go/pkg/mod/github.com/hashicorp/terraform@v0.12.19/internal/tfplugin5/tfplugin5.pb.go:3045 +0x217
+2020-01-21T16:37:04.026-0500 [DEBUG] plugin.terraform-provider-k14s: google.golang.org/grpc.(*Server).processUnaryRPC(0xc000001b00, 0x1f1d160, 0xc000091080, 0xc0004d0700, 0xc0003d0090, 0x263d0e0, 0x0, 0x0, 0x0)
+2020-01-21T16:37:04.026-0500 [DEBUG] plugin.terraform-provider-k14s: 	/Users/pivotal/workspace/ytt-go/pkg/mod/google.golang.org/grpc@v1.21.1/server.go:998 +0x46a
+2020-01-21T16:37:04.026-0500 [DEBUG] plugin.terraform-provider-k14s: google.golang.org/grpc.(*Server).handleStream(0xc000001b00, 0x1f1d160, 0xc000091080, 0xc0004d0700, 0x0)
+2020-01-21T16:37:04.026-0500 [DEBUG] plugin.terraform-provider-k14s: 	/Users/pivotal/workspace/ytt-go/pkg/mod/google.golang.org/grpc@v1.21.1/server.go:1278 +0xd97
+2020-01-21T16:37:04.026-0500 [DEBUG] plugin.terraform-provider-k14s: google.golang.org/grpc.(*Server).serveStreams.func1.1(0xc0000381a0, 0xc000001b00, 0x1f1d160, 0xc000091080, 0xc0004d0700)
+2020-01-21T16:37:04.026-0500 [DEBUG] plugin.terraform-provider-k14s: 	/Users/pivotal/workspace/ytt-go/pkg/mod/google.golang.org/grpc@v1.21.1/server.go:717 +0xbb
+2020-01-21T16:37:04.026-0500 [DEBUG] plugin.terraform-provider-k14s: created by google.golang.org/grpc.(*Server).serveStreams.func1
+2020-01-21T16:37:04.026-0500 [DEBUG] plugin.terraform-provider-k14s: 	/Users/pivotal/workspace/ytt-go/pkg/mod/google.golang.org/grpc@v1.21.1/server.go:715 +0xa1
+2020/01/21 16:37:04 [TRACE] GRPCProvider: Close
+2020-01-21T16:37:04.029-0500 [DEBUG] plugin: plugin process exited: path=/Users/pivotal/workspace/ytt-go/src/github.com/k14s/terraform-provider-k14s/examples/terraform-provider-k14s pid=76113 error="exit status 2"
+2020-01-21T16:37:04.029-0500 [DEBUG] plugin: plugin exited
+2020/01/21 16:37:04 [TRACE] statemgr.Filesystem: removing lock metadata file .terraform.tfstate.lock.info
+2020/01/21 16:37:04 [TRACE] statemgr.Filesystem: unlocking terraform.tfstate using fcntl flock

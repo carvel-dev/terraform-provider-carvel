@@ -1,6 +1,7 @@
 ## Docs
 
 - [Install](install.md)
+- [Provider config](provider.md)
 - Data sources
   - [k14s_ytt](k14s_ytt.md)
   - [k14s_kbld](k14s_kbld.md)

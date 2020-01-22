@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"os"
 	goexec "os/exec"
 
 	"github.com/hashicorp/terraform/helper/schema"
@@ -21,15 +22,20 @@ type SettableResourceData interface {
 	Set(key string, val interface{}) error
 }
 
+type Kubeconfig interface {
+	AsString() (string, string, error)
+}
+
 var _ ResourceData = &schema.ResourceData{}
 
 type Kapp struct {
-	data   SettableResourceData
-	logger logger.Logger
+	data       SettableResourceData
+	kubeconfig Kubeconfig
+	logger     logger.Logger
 }
 
 func (t *Kapp) Deploy() (string, string, error) {
-	args, stdin, err := t.addDeployArgs()
+	args, env, stdin, err := t.addDeployArgs()
 	if err != nil {
 		return "", "", fmt.Errorf("Building deploy args: %s", err)
 	}
@@ -38,6 +44,7 @@ func (t *Kapp) Deploy() (string, string, error) {
 
 	cmd := goexec.Command("kapp", args...)
 	cmd.Stdin = stdin
+	cmd.Env = append(os.Environ(), env...)
 	cmd.Stdout = &stdoutBs
 	cmd.Stderr = &stderrBs
 
@@ -51,7 +58,7 @@ func (t *Kapp) Deploy() (string, string, error) {
 }
 
 func (t *Kapp) Diff() (string, string, error) {
-	args, stdin, err := t.addDeployArgs()
+	args, env, stdin, err := t.addDeployArgs()
 	if err != nil {
 		return "", "", fmt.Errorf("Building deploy args: %s", err)
 	}
@@ -63,6 +70,7 @@ func (t *Kapp) Diff() (string, string, error) {
 
 	cmd := goexec.Command("kapp", args...)
 	cmd.Stdin = stdin
+	cmd.Env = append(os.Environ(), env...)
 	cmd.Stdout = &stdoutBs
 	cmd.Stderr = &stderrBs
 
@@ -109,7 +117,7 @@ func (t *Kapp) setDiff(stdout string) error {
 }
 
 func (t *Kapp) Delete() (string, string, error) {
-	args, stdin, err := t.addDeleteArgs()
+	args, env, stdin, err := t.addDeleteArgs()
 	if err != nil {
 		return "", "", fmt.Errorf("Building delete args: %s", err)
 	}
@@ -118,6 +126,7 @@ func (t *Kapp) Delete() (string, string, error) {
 
 	cmd := goexec.Command("kapp", args...)
 	cmd.Stdin = stdin
+	cmd.Env = append(os.Environ(), env...)
 	cmd.Stdout = &stdoutBs
 	cmd.Stderr = &stderrBs
 
@@ -130,7 +139,7 @@ func (t *Kapp) Delete() (string, string, error) {
 	return stdoutBs.String(), "", nil
 }
 
-func (t *Kapp) addDeployArgs() ([]string, io.Reader, error) {
+func (t *Kapp) addDeployArgs() ([]string, []string, io.Reader, error) {
 	args := []string{
 		"deploy",
 		"-a", t.data.Get(schemaAppKey).(string),
@@ -138,6 +147,19 @@ func (t *Kapp) addDeployArgs() ([]string, io.Reader, error) {
 		"--yes",
 		"--tty",
 	}
+
+	env := []string{}
+
+	kubeconfig, kubeconfigContext, err := t.kubeconfig.AsString()
+	if err != nil {
+		return nil, nil, nil, fmt.Errorf("Building kubeconfig: %s", err)
+	}
+
+	if len(kubeconfigContext) > 0 {
+		args = append(args, "--kubeconfig-context", kubeconfigContext)
+	}
+
+	env = append(env, "KAPP_KUBECONFIG_YAML="+kubeconfig)
 
 	var stdin io.Reader
 
@@ -157,7 +179,7 @@ func (t *Kapp) addDeployArgs() ([]string, io.Reader, error) {
 
 		config, err := schemamisc.Heredoc{config}.StripIndent()
 		if err != nil {
-			return nil, nil, fmt.Errorf("Formatting %s: %s", schemaConfigYAMLKey, err)
+			return nil, nil, nil, fmt.Errorf("Formatting %s: %s", schemaConfigYAMLKey, err)
 		}
 
 		stdin = bytes.NewReader([]byte(config))
@@ -180,10 +202,10 @@ func (t *Kapp) addDeployArgs() ([]string, io.Reader, error) {
 		}
 	}
 
-	return args, stdin, nil
+	return args, env, stdin, nil
 }
 
-func (t *Kapp) addDeleteArgs() ([]string, io.Reader, error) {
+func (t *Kapp) addDeleteArgs() ([]string, []string, io.Reader, error) {
 	args := []string{
 		"delete",
 		"-a", t.data.Get(schemaAppKey).(string),
@@ -191,6 +213,19 @@ func (t *Kapp) addDeleteArgs() ([]string, io.Reader, error) {
 		"--yes",
 		"--tty",
 	}
+
+	env := []string{}
+
+	kubeconfig, kubeconfigContext, err := t.kubeconfig.AsString()
+	if err != nil {
+		return nil, nil, nil, fmt.Errorf("Building kubeconfig: %s", err)
+	}
+
+	if len(kubeconfigContext) > 0 {
+		args = append(args, "--kubeconfig-context", kubeconfigContext)
+	}
+
+	env = append(env, "KAPP_KUBECONFIG_YAML="+kubeconfig)
 
 	deleteOptsRaw := t.data.Get(schemaDeleteKey).([]interface{})
 	if len(deleteOptsRaw) > 0 {
@@ -202,5 +237,5 @@ func (t *Kapp) addDeleteArgs() ([]string, io.Reader, error) {
 		}
 	}
 
-	return args, nil, nil
+	return args, env, nil, nil
 }
