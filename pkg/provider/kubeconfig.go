@@ -54,6 +54,8 @@ func (c Kubeconfig) AsString() (string, string, error) {
 		ClientKey:  kubeconfig[schemaKappKubeconfigClientKeyKey].(string),
 	}
 
+	connInfo.StripIndentInCerts()
+
 	if fromEnv {
 		if connInfo.HasValues() {
 			return "", "", fmt.Errorf("Expected key '%s' to be the only key configured",
@@ -146,4 +148,25 @@ type KubeconfigConnInfo struct {
 
 func (a KubeconfigConnInfo) HasValues() bool {
 	return len(a.Server+a.Username+a.Password+a.CACert+a.ClientCert+a.ClientKey) > 0
+}
+
+func (a *KubeconfigConnInfo) StripIndentInCerts() error {
+	var err error
+
+	a.CACert, err = schemamisc.Heredoc{a.CACert}.StripIndent()
+	if err != nil {
+		return fmt.Errorf("Formatting CA certificate: %s", err)
+	}
+
+	a.ClientCert, err = schemamisc.Heredoc{a.ClientCert}.StripIndent()
+	if err != nil {
+		return fmt.Errorf("Formatting client certificate: %s", err)
+	}
+
+	a.ClientKey, err = schemamisc.Heredoc{a.ClientKey}.StripIndent()
+	if err != nil {
+		return fmt.Errorf("Formatting client key: %s", err)
+	}
+
+	return nil
 }
