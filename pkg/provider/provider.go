@@ -30,7 +30,7 @@ func Provider() terraform.ResourceProvider {
 		Schema: resourceSchema,
 
 		ConfigureFunc: func(d *schema.ResourceData) (interface{}, error) {
-			return schemamisc.Context{Kubeconfig: Kubeconfig{d}}, nil
+			return schemamisc.Context{Kubeconfig: NewKubeconfig(d)}, nil
 		},
 	}
 }

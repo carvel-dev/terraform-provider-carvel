@@ -2,6 +2,7 @@
 
 /examples/.terraform
 /examples/crash.log
+/examples/debug.stderr.log
 
 *.tfstate
 *.tfstate.lock.info

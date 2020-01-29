@@ -10,16 +10,25 @@ import (
 )
 
 type Kubeconfig struct {
-	data *schema.ResourceData
+	kappRaw []interface{}
+}
+
+func NewKubeconfig(d *schema.ResourceData) Kubeconfig {
+	// Do not save off resource data as it should not be accessed
+	// beyond this method call (ConfigureFunc is parent)
+	val, ok := d.Get(schemaKappKey).([]interface{})
+	if !ok {
+		val = []interface{}{}
+	}
+	return Kubeconfig{val}
 }
 
 func (c Kubeconfig) AsString() (string, string, error) {
-	kappRaw := c.data.Get(schemaKappKey).([]interface{})
-	if len(kappRaw) == 0 {
+	if len(c.kappRaw) == 0 {
 		return "", "", fmt.Errorf("Expected non-empty provider config (key '%s')", schemaKappKey)
 	}
 
-	kapp := kappRaw[0].(map[string]interface{})
+	kapp := c.kappRaw[0].(map[string]interface{})
 
 	kubeconfigYAML := kapp[schemaKappKubeconfigYAMLKey].(string)
 	kubeconfigRaw := kapp[schemaKappKubeconfigKey].([]interface{})
