@@ -51,20 +51,24 @@ func (t *Ytt) addArgs() ([]string, io.Reader, error) {
 		args = append(args, "--ignore-unknown-comments")
 	}
 
-	values := t.data.Get(schemaValuesYAMLKey).(string)
-	if len(values) > 0 {
-		args = append(args, "-f-")
-
-		values, err := schemamisc.Heredoc{values}.StripIndent()
-		if err != nil {
-			return nil, nil, fmt.Errorf("Formatting %s: %s", schemaValuesYAMLKey, err)
-		}
-
-		stdin = bytes.NewReader([]byte(values))
+	for k, v := range t.data.Get(schemaValuesYAMLKey).(map[string]interface{}) {
+		args = append(args, []string{"--data-value-yaml", k + "=" + v.(string)}...)
 	}
 
 	for k, v := range t.data.Get(schemaValuesKey).(map[string]interface{}) {
 		args = append(args, []string{"--data-value", k + "=" + v.(string)}...)
+	}
+
+	config := t.data.Get(schemaConfigYAMLKey).(string)
+	if len(config) > 0 {
+		args = append(args, "-f-")
+
+		config, err := schemamisc.Heredoc{config}.StripIndent()
+		if err != nil {
+			return nil, nil, fmt.Errorf("Formatting %s: %s", schemaConfigYAMLKey, err)
+		}
+
+		stdin = bytes.NewReader([]byte(config))
 	}
 
 	return args, stdin, nil

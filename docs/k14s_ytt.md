@@ -6,8 +6,9 @@ k14s_ytt data source provides ability to template with ytt.
 
 - `files` (list of strings) List of file paths (and/or directory paths) to provie to ytt
 - `ignore_unknown_comments` (bool; optional) Equivalent to --ignore-unkown-comments
-- `values_yaml` (string) Data values as YAML (multiline strings are indent-trimmed)
 - `values` (map[string]string) Data values as _string_ KVs. Passed to ytt via `--data-value` flag. Note that terraform allows to set values to any type (e.g. boolean); however, it will coerce values to strings before this provider seem them.
+- `values_yaml` (map[string]string) Data values as YAML KVs. Passed to ytt via `--data-value-yaml`.
+- `config_yaml` (string) Configuration YAML (multiline strings are indent-trimmed). Could include YAML document annotated as `@data/values`. Passed to ytt over stdin.
 - `debug_logs` (bool; optional; default=false) Log to /tmp/terraform-provider-k14s.log
 
 ### Computed Attributes

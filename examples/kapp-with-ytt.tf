@@ -1,6 +1,6 @@
 data "k14s_ytt" "app2" {
   files = ["ytt-k8s"]
-  values_yaml = <<EOF
+  config_yaml = <<EOF
     #@data/values
     ---
     cm1: "cm1"
