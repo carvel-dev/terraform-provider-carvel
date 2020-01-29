@@ -1,7 +1,7 @@
 # terraform-provider-k14s
 
 - Slack: [#k14s in Kubernetes slack](https://slack.kubernetes.io)
-- [Docs](docs/README.md) with topics about resources and their attributes
+- [Docs](docs/README.md) with topics about resources and their attributes, examples
 - Refer to [Install doc](docs/install.md) for setup instructions
 
 k14s Terraform provider currently includes ability to:

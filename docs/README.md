@@ -7,3 +7,5 @@
   - [k14s_kbld](k14s_kbld.md) to resolve Docker image digests
 - Resources
   - [k14s_kapp](k14s_kapp.md) to deploy Kubernetes resources
+- Examples
+  - [k8s guestbook](../examples/guestbook)
