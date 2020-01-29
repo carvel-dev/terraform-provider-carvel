@@ -2,6 +2,7 @@
 
 /examples/.terraform
 /examples/terraform-provider-k14s
+/examples/crash.log
 
 *.tfstate
 *.tfstate.backup
