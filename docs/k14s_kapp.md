@@ -10,7 +10,7 @@ k14s_kapp resource provides ability to manage set of Kubernetes resources.
 - `files` (list of strings; optional) List of file paths to provide to kapp
 - `diff_changes` (bool; optional) Equivalent to --diff-changes
 - `diff_context` (int; optional) Equivalent to --diff-context
-- `debug_logs` (bool; optional; default=false) Log to /tmp/terraform-provider-k14s.log
+- `debug_logs` (bool; optional; default=false) Log to `/tmp/terraform-provider-k14s.log`
 - `deploy` (optional)
   - `raw_options` (list of strings) Raw options to pass to kapp (e.g. `--wait=false`)
 - `delete` (optional)
