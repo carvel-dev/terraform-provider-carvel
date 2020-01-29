@@ -17,15 +17,20 @@ k14s_ytt data source provides ability to template with ytt.
 
 ### Example
 
+Use `values` for string values and `values_yaml` for non-string values.
+
 ```yaml
 data "k14s_ytt" "tpl1" {
   files = ["ytt-k8s"]
-  values_yaml = <<EOF
-    #@data/values
-    ---
-    cm1: "cm1"
-    cm2: "cm3"
-  EOF
+
+  values = {
+    prop1 = "val1"
+  }
+
+  values_yaml = {
+    prop2 = true
+    prop3 = 156
+  }
 }
 
 output "result" {
@@ -33,11 +38,13 @@ output "result" {
 }
 ```
 
+Use `config_yaml` to provide more complex data values
+
 ```yaml
 data "k14s_ytt" "tpl1" {
   files = ["ytt-k8s"]
 
-  values_yaml = <<EOF
+  config_yaml = <<EOF
     #@data/values
     ---
     cm1: "cm1"
