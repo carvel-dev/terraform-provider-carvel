@@ -1,5 +1,6 @@
 data "k14s_ytt" "example1" {
   files = ["ytt-example"]
+
   values_yaml = <<EOF
     #@data/values
     ---
@@ -8,6 +9,11 @@ data "k14s_ytt" "example1" {
     map:
       nested: true
   EOF
+
+  values = {
+    str = "tfstr2"
+    "map.nested" = "new-value"
+  }
 }
 
 // See `terraform output` for the result

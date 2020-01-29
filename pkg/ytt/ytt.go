@@ -63,5 +63,9 @@ func (t *Ytt) addArgs() ([]string, io.Reader, error) {
 		stdin = bytes.NewReader([]byte(values))
 	}
 
+	for k, v := range t.data.Get(schemaValuesKey).(map[string]interface{}) {
+		args = append(args, []string{"--data-value", k + "=" + v.(string)}...)
+	}
+
 	return args, stdin, nil
 }
