@@ -9,3 +9,5 @@ k14s Terraform provider currently includes ability to:
 - template with [ytt](https://get-ytt.io)
 - resolve image digests with [kbld](https://get-kbld.io)
 - deploy k8s resources with [kapp](https://get-kapp.io)
+
+See [examples/guestbook](examples/guestbook) for an example installing Kubernetes Guestbook.

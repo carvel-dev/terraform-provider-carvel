@@ -1,10 +1,18 @@
 ## Kubernetes Guestbook example
 
-YAML configuration copied from https://github.com/kubernetes/examples/tree/f3d89d074fe992d12adb54ad9859a68fe1e1e082/guestbook/all-in-one
+Files:
 
-Example output from runing `terraform apply`:
+- `app.tf`: specifies Terraform config
+- `*.yaml`: specifies guestbook application (configuration copied from https://github.com/kubernetes/examples/tree/f3d89d074fe992d12adb54ad9859a68fe1e1e082/guestbook/all-in-one)
+- `terraform-provider-k14s`: shim script for terraform provider
+
+Example output from running `terraform apply`:
 
 ```bash
+$ git clone https://github.com/k14s/terraform-provider-k14s
+
+$ cd terraform-provider-k14s/examples/guestbook
+
 $ terraform apply
 data.k14s_ytt.guestbook: Refreshing state...
 
