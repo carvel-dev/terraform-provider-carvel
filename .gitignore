@@ -1,9 +1,9 @@
 .DS_Store
 
-/examples/.terraform
-/examples/crash.log
-/examples/debug.stderr.log
+crash.log
+/examples/test/debug.stderr.log
 
+.terraform/
 *.tfstate
 *.tfstate.lock.info
 *.tfstate.backup

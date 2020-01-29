@@ -1,5 +1,0 @@
-#!/bin/bash
-
-set -e
-
-../terraform-provider-k14s 2>>debug.stderr.log
