@@ -1,10 +1,10 @@
 .DS_Store
 
 /examples/.terraform
-/examples/terraform-provider-k14s
 /examples/crash.log
 
 *.tfstate
+*.tfstate.lock.info
 *.tfstate.backup
 
 /terraform-provider-k14s
