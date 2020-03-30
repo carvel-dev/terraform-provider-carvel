@@ -4,7 +4,7 @@ Files:
 
 - `app.tf`: specifies Terraform config
 - `*.yaml`: specifies guestbook application (configuration copied from https://github.com/kubernetes/examples/tree/f3d89d074fe992d12adb54ad9859a68fe1e1e082/guestbook/all-in-one)
-- `terraform-provider-k14s`: shim script for terraform provider
+- `terraform-provider-k14s`: shim script for terraform provider (only necessary for quick provider iteration)
 
 Example output from running `terraform apply`:
 
