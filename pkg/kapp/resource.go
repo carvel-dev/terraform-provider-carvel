@@ -47,11 +47,11 @@ func (r Resource) Read(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(r.id(d))
 
 	r.clearDiff(d)
-	defer r.clearDiff(d)
 
 	// Updates revision to indicate change
 	_, _, err := (&Kapp{d, meta.(schemamisc.Context).Kubeconfig, logger}).Diff()
 	if err != nil {
+		r.logger.Error("Ignoring diffing error: %s", err)
 		// TODO ignore diffing error since it might
 		// be diffed against invalid old configuration
 		// (eg Ownership error with previously set configuration).
@@ -98,7 +98,7 @@ func (r Resource) CustomizeDiff(diff *schema.ResourceDiff, meta interface{}) err
 
 	_, _, err := (&Kapp{SettableDiff{diff}, meta.(schemamisc.Context).Kubeconfig, logger}).Diff()
 	if err != nil {
-		return fmt.Errorf("Customizing diff %s: %s", r.id(diff), err)
+		r.logger.Error("Ignoring diffing error: %s", err)
 	}
 
 	return nil
