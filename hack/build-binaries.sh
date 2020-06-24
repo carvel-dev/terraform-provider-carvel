@@ -2,7 +2,7 @@
 
 set -e -x -u
 
-export VERSION=v0.5.0
+export VERSION=v0.6.0
 
 ./hack/build.sh
 
