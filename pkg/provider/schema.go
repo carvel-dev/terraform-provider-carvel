@@ -17,6 +17,7 @@ const (
 	schemaKappKubeconfigCACertKey     = "ca_cert"
 	schemaKappKubeconfigClientCertKey = "client_cert"
 	schemaKappKubeconfigClientKeyKey  = "client_key"
+	schemaKappKubeconfigTokenKey      = "token"
 )
 
 var (
@@ -75,6 +76,11 @@ var (
 								schemaKappKubeconfigClientKeyKey: {
 									Type:        schema.TypeString,
 									Description: "Client key in PEM format",
+									Optional:    true,
+								},
+								schemaKappKubeconfigTokenKey: {
+									Type:        schema.TypeString,
+									Description: "Auth token",
 									Optional:    true,
 								},
 							},

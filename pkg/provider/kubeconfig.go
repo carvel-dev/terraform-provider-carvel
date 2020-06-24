@@ -61,6 +61,7 @@ func (c Kubeconfig) AsString() (string, string, error) {
 		CACert:     kubeconfig[schemaKappKubeconfigCACertKey].(string),
 		ClientCert: kubeconfig[schemaKappKubeconfigClientCertKey].(string),
 		ClientKey:  kubeconfig[schemaKappKubeconfigClientKeyKey].(string),
+		Token:      kubeconfig[schemaKappKubeconfigTokenKey].(string),
 	}
 
 	connInfo.StripIndentInCerts()
@@ -103,6 +104,9 @@ func (Kubeconfig) buildConfig(connInfo KubeconfigConnInfo) (string, string, erro
 	}
 	if len(connInfo.ClientKey) > 0 {
 		userConfig["client-key-data"] = base64.StdEncoding.EncodeToString([]byte(connInfo.ClientKey))
+	}
+	if len(connInfo.Token) > 0 {
+		userConfig["token"] = connInfo.Token
 	}
 
 	const (
@@ -153,10 +157,11 @@ type KubeconfigConnInfo struct {
 	CACert     string
 	ClientCert string
 	ClientKey  string
+	Token      string
 }
 
 func (a KubeconfigConnInfo) HasValues() bool {
-	return len(a.Server+a.Username+a.Password+a.CACert+a.ClientCert+a.ClientKey) > 0
+	return len(a.Server+a.Username+a.Password+a.CACert+a.ClientCert+a.ClientKey+a.Token) > 0
 }
 
 func (a *KubeconfigConnInfo) StripIndentInCerts() error {
