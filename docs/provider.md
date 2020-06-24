@@ -14,6 +14,7 @@ Provider configuration currently carries kapp kubeconfig.
     - `ca_cert` (string; optional) CA certificate in PEM format (multiline strings are indent-trimmed)
     - `client_cert` (string; optional) Client certificate in PEM format (multiline strings are indent-trimmed)
     - `client_key` (string; optional) Client key in PEM format (multiline strings are indent-trimmed)
+    - `token` (string; optional) Authentication token
   - `kubeconfig_yaml` (optional) Kubeconfig as YAML (multiline strings are indent-trimmed)
 
 ### Example
@@ -84,6 +85,26 @@ provider "k14s" {
       EOF
       client_cert = "-----BEGIN CERTIFICATE-----\n..."
       client_key = "-----BEGIN PRIVATE KEY-----\n..."
+    }
+  }
+}
+```
+
+Authenticate with token:
+
+```yaml
+provider "k14s" {
+  kapp {
+    kubeconfig {
+      server = "https://..."
+      ca_cert = <<EOF
+        -----BEGIN CERTIFICATE-----
+        MIIDCzCCAfOgAwIBAgIQAkwp/felW4+kYeaI0LwmezANBgkqhkiG9w0BAQsFADAv
+        ...
+        NPB7dNDuLFmCvKX9Anhr
+        -----END CERTIFICATE-----
+      EOF
+      token = "IBAgIQAkwp..."
     }
   }
 }
