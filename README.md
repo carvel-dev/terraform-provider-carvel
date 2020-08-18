@@ -3,6 +3,7 @@
 - Slack: [#k14s in Kubernetes slack](https://slack.kubernetes.io)
 - [Docs](docs/README.md) with topics about resources and their attributes, examples
 - Refer to [Install doc](docs/install.md) for setup instructions
+- Status: Experimental
 
 k14s Terraform provider currently includes ability to:
 
