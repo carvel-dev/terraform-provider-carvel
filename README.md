@@ -12,3 +12,5 @@ k14s Terraform provider currently includes ability to:
 - deploy k8s resources with [kapp](https://get-kapp.io)
 
 See [examples/guestbook](examples/guestbook) for an example installing Kubernetes Guestbook.
+
+Works with Terraform 0.13+

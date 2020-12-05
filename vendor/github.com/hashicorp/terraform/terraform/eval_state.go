@@ -187,6 +187,18 @@ func (n *EvalUpdateStateHook) Eval(ctx EvalContext) (interface{}, error) {
 	return nil, nil
 }
 
+// evalWriteEmptyState wraps EvalWriteState to specifically record an empty
+// state for a particular object.
+type evalWriteEmptyState struct {
+	EvalWriteState
+}
+
+func (n *evalWriteEmptyState) Eval(ctx EvalContext) (interface{}, error) {
+	var state *states.ResourceInstanceObject
+	n.State = &state
+	return n.EvalWriteState.Eval(ctx)
+}
+
 // EvalWriteState is an EvalNode implementation that saves the given object
 // as the current object for the selected resource instance.
 type EvalWriteState struct {
@@ -205,7 +217,7 @@ type EvalWriteState struct {
 
 	// Dependencies are the inter-resource dependencies to be stored in the
 	// state.
-	Dependencies *[]addrs.AbsResource
+	Dependencies *[]addrs.ConfigResource
 }
 
 func (n *EvalWriteState) Eval(ctx EvalContext) (interface{}, error) {
@@ -218,8 +230,8 @@ func (n *EvalWriteState) Eval(ctx EvalContext) (interface{}, error) {
 	absAddr := n.Addr.Absolute(ctx.Path())
 	state := ctx.State()
 
-	if n.ProviderAddr.ProviderConfig.Type.LegacyString() == "" {
-		return nil, fmt.Errorf("failed to write state for %s, missing provider type", absAddr)
+	if n.ProviderAddr.Provider.Type == "" {
+		return nil, fmt.Errorf("failed to write state for %s: missing provider type", absAddr)
 	}
 	obj := *n.State
 	if obj == nil || obj.Value.IsNull() {
@@ -452,41 +464,48 @@ func (n *EvalMaybeRestoreDeposedObject) Eval(ctx EvalContext) (interface{}, erro
 // in that case, allowing expression evaluation to see it as a zero-element
 // list rather than as not set at all.
 type EvalWriteResourceState struct {
-	Addr         addrs.Resource
+	Addr         addrs.AbsResource
 	Config       *configs.Resource
 	ProviderAddr addrs.AbsProviderConfig
 }
 
-// TODO: test
 func (n *EvalWriteResourceState) Eval(ctx EvalContext) (interface{}, error) {
 	var diags tfdiags.Diagnostics
-	absAddr := n.Addr.Absolute(ctx.Path())
 	state := ctx.State()
 
-	count, countDiags := evaluateResourceCountExpression(n.Config.Count, ctx)
-	diags = diags.Append(countDiags)
-	if countDiags.HasErrors() {
-		return nil, diags.Err()
-	}
+	// We'll record our expansion decision in the shared "expander" object
+	// so that later operations (i.e. DynamicExpand and expression evaluation)
+	// can refer to it. Since this node represents the abstract module, we need
+	// to expand the module here to create all resources.
+	expander := ctx.InstanceExpander()
 
-	eachMode := states.NoEach
-	if count >= 0 { // -1 signals "count not set"
-		eachMode = states.EachList
-	}
+	switch {
+	case n.Config.Count != nil:
+		count, countDiags := evaluateCountExpression(n.Config.Count, ctx)
+		diags = diags.Append(countDiags)
+		if countDiags.HasErrors() {
+			return nil, diags.Err()
+		}
 
-	forEach, forEachDiags := evaluateResourceForEachExpression(n.Config.ForEach, ctx)
-	diags = diags.Append(forEachDiags)
-	if forEachDiags.HasErrors() {
-		return nil, diags.Err()
-	}
+		state.SetResourceProvider(n.Addr, n.ProviderAddr)
+		expander.SetResourceCount(n.Addr.Module, n.Addr.Resource, count)
 
-	if forEach != nil {
-		eachMode = states.EachMap
-	}
+	case n.Config.ForEach != nil:
+		forEach, forEachDiags := evaluateForEachExpression(n.Config.ForEach, ctx)
+		diags = diags.Append(forEachDiags)
+		if forEachDiags.HasErrors() {
+			return nil, diags.Err()
+		}
 
-	// This method takes care of all of the business logic of updating this
-	// while ensuring that any existing instances are preserved, etc.
-	state.SetResourceMeta(absAddr, eachMode, n.ProviderAddr)
+		// This method takes care of all of the business logic of updating this
+		// while ensuring that any existing instances are preserved, etc.
+		state.SetResourceProvider(n.Addr, n.ProviderAddr)
+		expander.SetResourceForEach(n.Addr.Module, n.Addr.Resource, forEach)
+
+	default:
+		state.SetResourceProvider(n.Addr, n.ProviderAddr)
+		expander.SetResourceSingle(n.Addr.Module, n.Addr.Resource)
+	}
 
 	return nil, nil
 }
@@ -527,7 +546,7 @@ type EvalRefreshDependencies struct {
 	// Prior State
 	State **states.ResourceInstanceObject
 	// Dependencies to write to the new state
-	Dependencies *[]addrs.AbsResource
+	Dependencies *[]addrs.ConfigResource
 }
 
 func (n *EvalRefreshDependencies) Eval(ctx EvalContext) (interface{}, error) {
@@ -537,7 +556,7 @@ func (n *EvalRefreshDependencies) Eval(ctx EvalContext) (interface{}, error) {
 		return nil, nil
 	}
 
-	depMap := make(map[string]addrs.AbsResource)
+	depMap := make(map[string]addrs.ConfigResource)
 	for _, d := range *n.Dependencies {
 		depMap[d.String()] = d
 	}
@@ -551,7 +570,7 @@ func (n *EvalRefreshDependencies) Eval(ctx EvalContext) (interface{}, error) {
 		return nil, nil
 	}
 
-	deps := make([]addrs.AbsResource, 0, len(depMap))
+	deps := make([]addrs.ConfigResource, 0, len(depMap))
 	for _, d := range depMap {
 		deps = append(deps, d)
 	}
@@ -561,6 +580,39 @@ func (n *EvalRefreshDependencies) Eval(ctx EvalContext) (interface{}, error) {
 	})
 
 	*n.Dependencies = deps
+
+	return nil, nil
+}
+
+// EvalRefreshLifecycle is an EvalNode implementation that updates
+// the status of the lifecycle options stored in the state.
+// This currently only applies to create_before_destroy.
+type EvalRefreshLifecycle struct {
+	Addr addrs.AbsResourceInstance
+
+	Config *configs.Resource
+	// Prior State
+	State **states.ResourceInstanceObject
+	// ForceCreateBeforeDestroy indicates a create_before_destroy resource
+	// depends on this resource.
+	ForceCreateBeforeDestroy bool
+}
+
+func (n *EvalRefreshLifecycle) Eval(ctx EvalContext) (interface{}, error) {
+	state := *n.State
+	if state == nil {
+		// no existing state
+		return nil, nil
+	}
+
+	// In 0.13 we could be refreshing a resource with no config.
+	// We should be operating on managed resource, but check here to be certain
+	if n.Config == nil || n.Config.Managed == nil {
+		log.Printf("[WARN] EvalRefreshLifecycle: no Managed config value found in instance state for %q", n.Addr)
+		return nil, nil
+	}
+
+	state.CreateBeforeDestroy = n.Config.Managed.CreateBeforeDestroy || n.ForceCreateBeforeDestroy
 
 	return nil, nil
 }

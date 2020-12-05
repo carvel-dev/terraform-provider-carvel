@@ -6,6 +6,7 @@ import (
 	"sort"
 
 	"github.com/hashicorp/hcl/v2"
+	"github.com/hashicorp/hcl/v2/ext/customdecode"
 	"github.com/zclconf/go-cty/cty"
 	"github.com/zclconf/go-cty/cty/convert"
 	"github.com/zclconf/go-cty/cty/function"
@@ -191,6 +192,14 @@ func (s *AttrSpec) decode(content *hcl.BodyContent, blockLabels []blockLabel, ct
 		// We don't need to check required and emit a diagnostic here, because
 		// that would already have happened when building "content".
 		return cty.NullVal(s.Type), nil
+	}
+
+	if decodeFn := customdecode.CustomExpressionDecoderForType(s.Type); decodeFn != nil {
+		v, diags := decodeFn(attr.Expr, ctx)
+		if v == cty.NilVal {
+			v = cty.UnknownVal(s.Type)
+		}
+		return v, diags
 	}
 
 	val, diags := attr.Expr.Value(ctx)
@@ -1223,6 +1232,16 @@ func (s *BlockAttrsSpec) decode(content *hcl.BodyContent, blockLabels []blockLab
 
 	vals := make(map[string]cty.Value, len(attrs))
 	for name, attr := range attrs {
+		if decodeFn := customdecode.CustomExpressionDecoderForType(s.ElementType); decodeFn != nil {
+			attrVal, attrDiags := decodeFn(attr.Expr, ctx)
+			diags = append(diags, attrDiags...)
+			if attrVal == cty.NilVal {
+				attrVal = cty.UnknownVal(s.ElementType)
+			}
+			vals[name] = attrVal
+			continue
+		}
+
 		attrVal, attrDiags := attr.Expr.Value(ctx)
 		diags = append(diags, attrDiags...)
 
@@ -1543,6 +1562,52 @@ func (s *TransformFuncSpec) impliedType() cty.Type {
 func (s *TransformFuncSpec) sourceRange(content *hcl.BodyContent, blockLabels []blockLabel) hcl.Range {
 	// We'll just pass through our wrapped range here, even though that's
 	// not super-accurate, because there's nothing better to return.
+	return s.Wrapped.sourceRange(content, blockLabels)
+}
+
+// ValidateFuncSpec is a spec that allows for extended
+// developer-defined validation. The validation function receives the
+// result of the wrapped spec.
+//
+// The Subject field of the returned Diagnostic is optional. If not
+// specified, it is automatically populated with the range covered by
+// the wrapped spec.
+//
+type ValidateSpec struct {
+	Wrapped Spec
+	Func    func(value cty.Value) hcl.Diagnostics
+}
+
+func (s *ValidateSpec) visitSameBodyChildren(cb visitFunc) {
+	cb(s.Wrapped)
+}
+
+func (s *ValidateSpec) decode(content *hcl.BodyContent, blockLabels []blockLabel, ctx *hcl.EvalContext) (cty.Value, hcl.Diagnostics) {
+	wrappedVal, diags := s.Wrapped.decode(content, blockLabels, ctx)
+	if diags.HasErrors() {
+		// We won't try to run our function in this case, because it'll probably
+		// generate confusing additional errors that will distract from the
+		// root cause.
+		return cty.UnknownVal(s.impliedType()), diags
+	}
+
+	validateDiags := s.Func(wrappedVal)
+	// Auto-populate the Subject fields if they weren't set.
+	for i := range validateDiags {
+		if validateDiags[i].Subject == nil {
+			validateDiags[i].Subject = s.sourceRange(content, blockLabels).Ptr()
+		}
+	}
+
+	diags = append(diags, validateDiags...)
+	return wrappedVal, diags
+}
+
+func (s *ValidateSpec) impliedType() cty.Type {
+	return s.Wrapped.impliedType()
+}
+
+func (s *ValidateSpec) sourceRange(content *hcl.BodyContent, blockLabels []blockLabel) hcl.Range {
 	return s.Wrapped.sourceRange(content, blockLabels)
 }
 

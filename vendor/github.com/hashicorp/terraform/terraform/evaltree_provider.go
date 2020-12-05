@@ -12,25 +12,10 @@ func ProviderEvalTree(n *NodeApplyableProvider, config *configs.Provider) EvalNo
 	var provider providers.Interface
 
 	addr := n.Addr
-	relAddr := addr.ProviderConfig
 
 	seq := make([]EvalNode, 0, 5)
 	seq = append(seq, &EvalInitProvider{
-		TypeName: relAddr.Type.LegacyString(),
-		Addr:     addr.ProviderConfig,
-	})
-
-	// Input stuff
-	seq = append(seq, &EvalOpFilter{
-		Ops: []walkOperation{walkImport},
-		Node: &EvalSequence{
-			Nodes: []EvalNode{
-				&EvalGetProvider{
-					Addr:   addr,
-					Output: &provider,
-				},
-			},
-		},
+		Addr: addr,
 	})
 
 	seq = append(seq, &EvalOpFilter{
@@ -42,7 +27,7 @@ func ProviderEvalTree(n *NodeApplyableProvider, config *configs.Provider) EvalNo
 					Output: &provider,
 				},
 				&EvalValidateProvider{
-					Addr:     relAddr,
+					Addr:     addr,
 					Provider: &provider,
 					Config:   config,
 				},
@@ -50,7 +35,6 @@ func ProviderEvalTree(n *NodeApplyableProvider, config *configs.Provider) EvalNo
 		},
 	})
 
-	// Apply stuff
 	seq = append(seq, &EvalOpFilter{
 		Ops: []walkOperation{walkRefresh, walkPlan, walkApply, walkDestroy, walkImport},
 		Node: &EvalSequence{
@@ -66,13 +50,26 @@ func ProviderEvalTree(n *NodeApplyableProvider, config *configs.Provider) EvalNo
 	// We configure on everything but validate, since validate may
 	// not have access to all the variables.
 	seq = append(seq, &EvalOpFilter{
-		Ops: []walkOperation{walkRefresh, walkPlan, walkApply, walkDestroy, walkImport},
+		Ops: []walkOperation{walkRefresh, walkPlan, walkApply, walkDestroy},
 		Node: &EvalSequence{
 			Nodes: []EvalNode{
 				&EvalConfigProvider{
-					Addr:     relAddr,
+					Addr:     addr,
 					Provider: &provider,
 					Config:   config,
+				},
+			},
+		},
+	})
+	seq = append(seq, &EvalOpFilter{
+		Ops: []walkOperation{walkImport},
+		Node: &EvalSequence{
+			Nodes: []EvalNode{
+				&EvalConfigProvider{
+					Addr:                addr,
+					Provider:            &provider,
+					Config:              config,
+					VerifyConfigIsKnown: true,
 				},
 			},
 		},
@@ -84,5 +81,5 @@ func ProviderEvalTree(n *NodeApplyableProvider, config *configs.Provider) EvalNo
 // CloseProviderEvalTree returns the evaluation tree for closing
 // provider connections that aren't needed anymore.
 func CloseProviderEvalTree(addr addrs.AbsProviderConfig) EvalNode {
-	return &EvalCloseProvider{Addr: addr.ProviderConfig}
+	return &EvalCloseProvider{Addr: addr}
 }

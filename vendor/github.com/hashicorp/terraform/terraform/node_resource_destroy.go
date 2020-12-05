@@ -26,7 +26,8 @@ type NodeDestroyResourceInstance struct {
 }
 
 var (
-	_ GraphNodeResource            = (*NodeDestroyResourceInstance)(nil)
+	_ GraphNodeModuleInstance      = (*NodeDestroyResourceInstance)(nil)
+	_ GraphNodeConfigResource      = (*NodeDestroyResourceInstance)(nil)
 	_ GraphNodeResourceInstance    = (*NodeDestroyResourceInstance)(nil)
 	_ GraphNodeDestroyer           = (*NodeDestroyResourceInstance)(nil)
 	_ GraphNodeDestroyerCBD        = (*NodeDestroyResourceInstance)(nil)
@@ -52,16 +53,25 @@ func (n *NodeDestroyResourceInstance) DestroyAddr() *addrs.AbsResourceInstance {
 
 // GraphNodeDestroyerCBD
 func (n *NodeDestroyResourceInstance) CreateBeforeDestroy() bool {
+	// State takes precedence during destroy.
+	// If the resource was removed, there is no config to check.
+	// If CBD was forced from descendent, it should be saved in the state
+	// already.
+	if s := n.instanceState; s != nil {
+		if s.Current != nil {
+			return s.Current.CreateBeforeDestroy
+		}
+	}
+
 	if n.CreateBeforeDestroyOverride != nil {
 		return *n.CreateBeforeDestroyOverride
 	}
 
-	// If we have no config, we just assume no
-	if n.Config == nil || n.Config.Managed == nil {
-		return false
+	if n.Config != nil && n.Config.Managed != nil {
+		return n.Config.Managed.CreateBeforeDestroy
 	}
 
-	return n.Config.Managed.CreateBeforeDestroy
+	return false
 }
 
 // GraphNodeDestroyerCBD
@@ -124,11 +134,7 @@ func (n *NodeDestroyResourceInstance) EvalTree() EvalNode {
 	addr := n.ResourceInstanceAddr()
 
 	// Get our state
-	rs := n.ResourceState
-	var is *states.ResourceInstance
-	if rs != nil {
-		is = rs.Instance(n.InstanceKey)
-	}
+	is := n.instanceState
 	if is == nil {
 		log.Printf("[WARN] NodeDestroyResourceInstance for %s with no state", addr)
 	}
@@ -224,39 +230,44 @@ func (n *NodeDestroyResourceInstance) EvalTree() EvalNode {
 					},
 				},
 
-				// Make sure we handle data sources properly.
+				// Managed resources need to be destroyed, while data sources
+				// are only removed from state.
 				&EvalIf{
 					If: func(ctx EvalContext) (bool, error) {
-						return addr.Resource.Resource.Mode == addrs.DataResourceMode, nil
+						return addr.Resource.Resource.Mode == addrs.ManagedResourceMode, nil
 					},
 
-					Then: &EvalReadDataApply{
-						Addr:           addr.Resource,
-						Config:         n.Config,
-						Change:         &changeApply,
-						Provider:       &provider,
-						ProviderAddr:   n.ResolvedProvider,
-						ProviderSchema: &providerSchema,
-						Output:         &state,
+					Then: &EvalSequence{
+						Nodes: []EvalNode{
+							&EvalApply{
+								Addr:           addr.Resource,
+								Config:         nil, // No configuration because we are destroying
+								State:          &state,
+								Change:         &changeApply,
+								Provider:       &provider,
+								ProviderAddr:   n.ResolvedProvider,
+								ProviderMetas:  n.ProviderMetas,
+								ProviderSchema: &providerSchema,
+								Output:         &state,
+								Error:          &err,
+							},
+							&EvalWriteState{
+								Addr:           addr.Resource,
+								ProviderAddr:   n.ResolvedProvider,
+								ProviderSchema: &providerSchema,
+								State:          &state,
+							},
+						},
 					},
-					Else: &EvalApply{
-						Addr:           addr.Resource,
-						Config:         nil, // No configuration because we are destroying
-						State:          &state,
-						Change:         &changeApply,
-						Provider:       &provider,
-						ProviderAddr:   n.ResolvedProvider,
-						ProviderSchema: &providerSchema,
-						Output:         &state,
-						Error:          &err,
+					Else: &evalWriteEmptyState{
+						EvalWriteState{
+							Addr:           addr.Resource,
+							ProviderAddr:   n.ResolvedProvider,
+							ProviderSchema: &providerSchema,
+						},
 					},
 				},
-				&EvalWriteState{
-					Addr:           addr.Resource,
-					ProviderAddr:   n.ResolvedProvider,
-					ProviderSchema: &providerSchema,
-					State:          &state,
-				},
+
 				&EvalApplyPost{
 					Addr:  addr.Resource,
 					State: &state,
@@ -265,36 +276,5 @@ func (n *NodeDestroyResourceInstance) EvalTree() EvalNode {
 				&EvalUpdateStateHook{},
 			},
 		},
-	}
-}
-
-// NodeDestroyResourceInstance represents a resource that is to be destroyed.
-//
-// Destroying a resource is a state-only operation: it is the individual
-// instances being destroyed that affects remote objects. During graph
-// construction, NodeDestroyResource should always depend on any other node
-// related to the given resource, since it's just a final cleanup to avoid
-// leaving skeleton resource objects in state after their instances have
-// all been destroyed.
-type NodeDestroyResource struct {
-	NodeAbstractResource *NodeAbstractResource
-}
-
-var (
-	_ GraphNodeEvalable = (*NodeDestroyResource)(nil)
-)
-
-func (n *NodeDestroyResource) Name() string {
-	return n.NodeAbstractResource.ResourceAddr().String() + " (clean up state)"
-}
-
-// GraphNodeEvalable
-func (n *NodeDestroyResource) EvalTree() EvalNode {
-	// This EvalNode will produce an error if the resource isn't already
-	// empty by the time it is called, since it should just be pruning the
-	// leftover husk of a resource in state after all of the child instances
-	// and their objects were destroyed.
-	return &EvalForgetResourceState{
-		Addr: n.NodeAbstractResource.ResourceAddr().Resource,
 	}
 }
