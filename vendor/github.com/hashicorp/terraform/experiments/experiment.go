@@ -13,13 +13,13 @@ type Experiment string
 // Each experiment is represented by a string that must be a valid HCL
 // identifier so that it can be specified in configuration.
 const (
-// Example = Experiment("example")
+	VariableValidation = Experiment("variable_validation")
 )
 
 func init() {
 	// Each experiment constant defined above must be registered here as either
 	// a current or a concluded experiment.
-	// registerCurrentExperiment(Example)
+	registerConcludedExperiment(VariableValidation, "Custom variable validation can now be used by default, without enabling an experiment.")
 }
 
 // GetCurrent takes an experiment name and returns the experiment value

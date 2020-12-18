@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform/tfdiags"
 )
 
-func buildProviderConfig(ctx EvalContext, addr addrs.ProviderConfig, config *configs.Provider) hcl.Body {
+func buildProviderConfig(ctx EvalContext, addr addrs.AbsProviderConfig, config *configs.Provider) hcl.Body {
 	var configBody hcl.Body
 	if config != nil {
 		configBody = config.Config
@@ -49,9 +49,10 @@ func buildProviderConfig(ctx EvalContext, addr addrs.ProviderConfig, config *con
 // EvalConfigProvider is an EvalNode implementation that configures
 // a provider that is already initialized and retrieved.
 type EvalConfigProvider struct {
-	Addr     addrs.ProviderConfig
-	Provider *providers.Interface
-	Config   *configs.Provider
+	Addr                addrs.AbsProviderConfig
+	Provider            *providers.Interface
+	Config              *configs.Provider
+	VerifyConfigIsKnown bool
 }
 
 func (n *EvalConfigProvider) Eval(ctx EvalContext) (interface{}, error) {
@@ -78,6 +79,16 @@ func (n *EvalConfigProvider) Eval(ctx EvalContext) (interface{}, error) {
 		return nil, diags.NonFatalErr()
 	}
 
+	if n.VerifyConfigIsKnown && !configVal.IsWhollyKnown() {
+		diags = diags.Append(&hcl.Diagnostic{
+			Severity: hcl.DiagError,
+			Summary:  "Invalid provider configuration",
+			Detail:   fmt.Sprintf("The configuration for %s depends on values that cannot be determined until apply.", n.Addr),
+			Subject:  &config.DeclRange,
+		})
+		return nil, diags.NonFatalErr()
+	}
+
 	configDiags := ctx.ConfigureProvider(n.Addr, configVal)
 	configDiags = configDiags.InConfigBody(configBody)
 
@@ -88,18 +99,17 @@ func (n *EvalConfigProvider) Eval(ctx EvalContext) (interface{}, error) {
 // and returns nothing. The provider can be retrieved again with the
 // EvalGetProvider node.
 type EvalInitProvider struct {
-	TypeName string
-	Addr     addrs.ProviderConfig
+	Addr addrs.AbsProviderConfig
 }
 
 func (n *EvalInitProvider) Eval(ctx EvalContext) (interface{}, error) {
-	return ctx.InitProvider(n.TypeName, n.Addr)
+	return ctx.InitProvider(n.Addr)
 }
 
 // EvalCloseProvider is an EvalNode implementation that closes provider
 // connections that aren't needed anymore.
 type EvalCloseProvider struct {
-	Addr addrs.ProviderConfig
+	Addr addrs.AbsProviderConfig
 }
 
 func (n *EvalCloseProvider) Eval(ctx EvalContext) (interface{}, error) {
@@ -125,7 +135,7 @@ type EvalGetProvider struct {
 }
 
 func (n *EvalGetProvider) Eval(ctx EvalContext) (interface{}, error) {
-	if n.Addr.ProviderConfig.Type.LegacyString() == "" {
+	if n.Addr.Provider.Type == "" {
 		// Should never happen
 		panic("EvalGetProvider used with uninitialized provider configuration address")
 	}

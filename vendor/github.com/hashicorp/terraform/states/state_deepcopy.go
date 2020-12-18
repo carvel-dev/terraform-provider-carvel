@@ -88,7 +88,6 @@ func (rs *Resource) DeepCopy() *Resource {
 
 	return &Resource{
 		Addr:           rs.Addr,
-		EachMode:       rs.EachMode,
 		Instances:      instances,
 		ProviderConfig: rs.ProviderConfig, // technically mutable, but immutable by convention
 	}
@@ -153,26 +152,20 @@ func (obj *ResourceInstanceObjectSrc) DeepCopy() *ResourceInstanceObjectSrc {
 
 	// Some addrs.Referencable implementations are technically mutable, but
 	// we treat them as immutable by convention and so we don't deep-copy here.
-	var dependencies []addrs.AbsResource
+	var dependencies []addrs.ConfigResource
 	if obj.Dependencies != nil {
-		dependencies = make([]addrs.AbsResource, len(obj.Dependencies))
+		dependencies = make([]addrs.ConfigResource, len(obj.Dependencies))
 		copy(dependencies, obj.Dependencies)
 	}
 
-	var dependsOn []addrs.Referenceable
-	if obj.DependsOn != nil {
-		dependsOn = make([]addrs.Referenceable, len(obj.DependsOn))
-		copy(dependsOn, obj.DependsOn)
-	}
-
 	return &ResourceInstanceObjectSrc{
-		Status:        obj.Status,
-		SchemaVersion: obj.SchemaVersion,
-		Private:       private,
-		AttrsFlat:     attrsFlat,
-		AttrsJSON:     attrsJSON,
-		Dependencies:  dependencies,
-		DependsOn:     dependsOn,
+		Status:              obj.Status,
+		SchemaVersion:       obj.SchemaVersion,
+		Private:             private,
+		AttrsFlat:           attrsFlat,
+		AttrsJSON:           attrsJSON,
+		Dependencies:        dependencies,
+		CreateBeforeDestroy: obj.CreateBeforeDestroy,
 	}
 }
 
@@ -197,9 +190,9 @@ func (obj *ResourceInstanceObject) DeepCopy() *ResourceInstanceObject {
 
 	// Some addrs.Referenceable implementations are technically mutable, but
 	// we treat them as immutable by convention and so we don't deep-copy here.
-	var dependencies []addrs.AbsResource
+	var dependencies []addrs.ConfigResource
 	if obj.Dependencies != nil {
-		dependencies = make([]addrs.AbsResource, len(obj.Dependencies))
+		dependencies = make([]addrs.ConfigResource, len(obj.Dependencies))
 		copy(dependencies, obj.Dependencies)
 	}
 
@@ -225,6 +218,7 @@ func (os *OutputValue) DeepCopy() *OutputValue {
 	}
 
 	return &OutputValue{
+		Addr:      os.Addr,
 		Value:     os.Value,
 		Sensitive: os.Sensitive,
 	}
