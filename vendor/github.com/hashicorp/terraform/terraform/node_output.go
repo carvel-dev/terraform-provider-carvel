@@ -2,12 +2,102 @@ package terraform
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/hashicorp/terraform/addrs"
 	"github.com/hashicorp/terraform/configs"
 	"github.com/hashicorp/terraform/dag"
 	"github.com/hashicorp/terraform/lang"
 )
+
+// nodeExpandOutput is the placeholder for an output that has not yet had
+// its module path expanded.
+type nodeExpandOutput struct {
+	Addr   addrs.OutputValue
+	Module addrs.Module
+	Config *configs.Output
+}
+
+var (
+	_ GraphNodeReferenceable     = (*nodeExpandOutput)(nil)
+	_ GraphNodeReferencer        = (*nodeExpandOutput)(nil)
+	_ GraphNodeReferenceOutside  = (*nodeExpandOutput)(nil)
+	_ GraphNodeDynamicExpandable = (*nodeExpandOutput)(nil)
+	_ graphNodeTemporaryValue    = (*nodeExpandOutput)(nil)
+	_ graphNodeExpandsInstances  = (*nodeExpandOutput)(nil)
+)
+
+func (n *nodeExpandOutput) expandsInstances() {}
+
+func (n *nodeExpandOutput) temporaryValue() bool {
+	// this must always be evaluated if it is a root module output
+	return !n.Module.IsRoot()
+}
+
+func (n *nodeExpandOutput) DynamicExpand(ctx EvalContext) (*Graph, error) {
+	var g Graph
+	expander := ctx.InstanceExpander()
+	for _, module := range expander.ExpandModule(n.Module) {
+		o := &NodeApplyableOutput{
+			Addr:   n.Addr.Absolute(module),
+			Config: n.Config,
+		}
+		log.Printf("[TRACE] Expanding output: adding %s as %T", o.Addr.String(), o)
+		g.Add(o)
+	}
+	return &g, nil
+}
+
+func (n *nodeExpandOutput) Name() string {
+	path := n.Module.String()
+	addr := n.Addr.String() + " (expand)"
+	if path != "" {
+		return path + "." + addr
+	}
+	return addr
+}
+
+// GraphNodeModulePath
+func (n *nodeExpandOutput) ModulePath() addrs.Module {
+	return n.Module
+}
+
+// GraphNodeReferenceable
+func (n *nodeExpandOutput) ReferenceableAddrs() []addrs.Referenceable {
+	// An output in the root module can't be referenced at all.
+	if n.Module.IsRoot() {
+		return nil
+	}
+
+	// the output is referenced through the module call, and via the
+	// module itself.
+	_, call := n.Module.Call()
+	callOutput := addrs.ModuleCallOutput{
+		Call: call,
+		Name: n.Addr.Name,
+	}
+
+	// Otherwise, we can reference the output via the
+	// module call itself
+	return []addrs.Referenceable{call, callOutput}
+}
+
+// GraphNodeReferenceOutside implementation
+func (n *nodeExpandOutput) ReferenceOutside() (selfPath, referencePath addrs.Module) {
+	// Output values have their expressions resolved in the context of the
+	// module where they are defined.
+	referencePath = n.Module
+
+	// ...but they are referenced in the context of their calling module.
+	selfPath = referencePath.Parent()
+
+	return // uses named return values
+}
+
+// GraphNodeReferencer
+func (n *nodeExpandOutput) References() []*addrs.Reference {
+	return referencesForOutput(n.Config)
+}
 
 // NodeApplyableOutput represents an output that is "applyable":
 // it is ready to be applied.
@@ -17,55 +107,47 @@ type NodeApplyableOutput struct {
 }
 
 var (
-	_ GraphNodeSubPath          = (*NodeApplyableOutput)(nil)
-	_ RemovableIfNotTargeted    = (*NodeApplyableOutput)(nil)
-	_ GraphNodeTargetDownstream = (*NodeApplyableOutput)(nil)
+	_ GraphNodeModuleInstance   = (*NodeApplyableOutput)(nil)
 	_ GraphNodeReferenceable    = (*NodeApplyableOutput)(nil)
 	_ GraphNodeReferencer       = (*NodeApplyableOutput)(nil)
 	_ GraphNodeReferenceOutside = (*NodeApplyableOutput)(nil)
 	_ GraphNodeEvalable         = (*NodeApplyableOutput)(nil)
+	_ graphNodeTemporaryValue   = (*NodeApplyableOutput)(nil)
 	_ dag.GraphNodeDotter       = (*NodeApplyableOutput)(nil)
 )
+
+func (n *NodeApplyableOutput) temporaryValue() bool {
+	// this must always be evaluated if it is a root module output
+	return !n.Addr.Module.IsRoot()
+}
 
 func (n *NodeApplyableOutput) Name() string {
 	return n.Addr.String()
 }
 
-// GraphNodeSubPath
+// GraphNodeModuleInstance
 func (n *NodeApplyableOutput) Path() addrs.ModuleInstance {
 	return n.Addr.Module
 }
 
-// RemovableIfNotTargeted
-func (n *NodeApplyableOutput) RemoveIfNotTargeted() bool {
-	// We need to add this so that this node will be removed if
-	// it isn't targeted or a dependency of a target.
-	return true
+// GraphNodeModulePath
+func (n *NodeApplyableOutput) ModulePath() addrs.Module {
+	return n.Addr.Module.Module()
 }
 
-// GraphNodeTargetDownstream
-func (n *NodeApplyableOutput) TargetDownstream(targetedDeps, untargetedDeps *dag.Set) bool {
-	// If any of the direct dependencies of an output are targeted then
-	// the output must always be targeted as well, so its value will always
-	// be up-to-date at the completion of an apply walk.
-	return true
-}
-
-func referenceOutsideForOutput(addr addrs.AbsOutputValue) (selfPath, referencePath addrs.ModuleInstance) {
-
+func referenceOutsideForOutput(addr addrs.AbsOutputValue) (selfPath, referencePath addrs.Module) {
 	// Output values have their expressions resolved in the context of the
 	// module where they are defined.
-	referencePath = addr.Module
+	referencePath = addr.Module.Module()
 
 	// ...but they are referenced in the context of their calling module.
-	selfPath = addr.Module.Parent()
+	selfPath = addr.Module.Parent().Module()
 
 	return // uses named return values
-
 }
 
 // GraphNodeReferenceOutside implementation
-func (n *NodeApplyableOutput) ReferenceOutside() (selfPath, referencePath addrs.ModuleInstance) {
+func (n *NodeApplyableOutput) ReferenceOutside() (selfPath, referencePath addrs.Module) {
 	return referenceOutsideForOutput(n.Addr)
 }
 
@@ -83,8 +165,8 @@ func referenceableAddrsForOutput(addr addrs.AbsOutputValue) []addrs.Referenceabl
 	// was declared.
 	_, outp := addr.ModuleCallOutput()
 	_, call := addr.Module.CallInstance()
-	return []addrs.Referenceable{outp, call}
 
+	return []addrs.Referenceable{outp, call}
 }
 
 // GraphNodeReferenceable
@@ -108,7 +190,7 @@ func referencesForOutput(c *configs.Output) []*addrs.Reference {
 
 // GraphNodeReferencer
 func (n *NodeApplyableOutput) References() []*addrs.Reference {
-	return appendResourceDestroyReferences(referencesForOutput(n.Config))
+	return referencesForOutput(n.Config)
 }
 
 // GraphNodeEvalable
@@ -116,11 +198,10 @@ func (n *NodeApplyableOutput) EvalTree() EvalNode {
 	return &EvalSequence{
 		Nodes: []EvalNode{
 			&EvalOpFilter{
-				Ops: []walkOperation{walkRefresh, walkPlan, walkApply, walkValidate, walkDestroy, walkPlanDestroy},
+				Ops: []walkOperation{walkEval, walkRefresh, walkPlan, walkApply, walkValidate, walkDestroy, walkPlanDestroy},
 				Node: &EvalWriteOutput{
-					Addr:      n.Addr.OutputValue,
-					Sensitive: n.Config.Sensitive,
-					Expr:      n.Config.Expr,
+					Addr:   n.Addr.OutputValue,
+					Config: n.Config,
 				},
 			},
 		},
@@ -146,45 +227,28 @@ type NodeDestroyableOutput struct {
 }
 
 var (
-	_ GraphNodeSubPath          = (*NodeDestroyableOutput)(nil)
-	_ RemovableIfNotTargeted    = (*NodeDestroyableOutput)(nil)
-	_ GraphNodeTargetDownstream = (*NodeDestroyableOutput)(nil)
-	_ GraphNodeReferencer       = (*NodeDestroyableOutput)(nil)
-	_ GraphNodeEvalable         = (*NodeDestroyableOutput)(nil)
-	_ dag.GraphNodeDotter       = (*NodeDestroyableOutput)(nil)
+	_ GraphNodeEvalable   = (*NodeDestroyableOutput)(nil)
+	_ dag.GraphNodeDotter = (*NodeDestroyableOutput)(nil)
 )
 
 func (n *NodeDestroyableOutput) Name() string {
 	return fmt.Sprintf("%s (destroy)", n.Addr.String())
 }
 
-// GraphNodeSubPath
-func (n *NodeDestroyableOutput) Path() addrs.ModuleInstance {
-	return n.Addr.Module
+// GraphNodeModulePath
+func (n *NodeDestroyableOutput) ModulePath() addrs.Module {
+	return n.Addr.Module.Module()
 }
 
-// RemovableIfNotTargeted
-func (n *NodeDestroyableOutput) RemoveIfNotTargeted() bool {
-	// We need to add this so that this node will be removed if
-	// it isn't targeted or a dependency of a target.
-	return true
-}
-
-// This will keep the destroy node in the graph if its corresponding output
-// node is also in the destroy graph.
-func (n *NodeDestroyableOutput) TargetDownstream(targetedDeps, untargetedDeps *dag.Set) bool {
-	return true
-}
-
-// GraphNodeReferencer
-func (n *NodeDestroyableOutput) References() []*addrs.Reference {
-	return referencesForOutput(n.Config)
+func (n *NodeDestroyableOutput) temporaryValue() bool {
+	// this must always be evaluated if it is a root module output
+	return !n.Addr.Module.IsRoot()
 }
 
 // GraphNodeEvalable
 func (n *NodeDestroyableOutput) EvalTree() EvalNode {
 	return &EvalDeleteOutput{
-		Addr: n.Addr.OutputValue,
+		Addr: n.Addr,
 	}
 }
 

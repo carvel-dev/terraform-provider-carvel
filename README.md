@@ -15,6 +15,8 @@ k14s Terraform provider currently includes ability to:
 
 See [examples/guestbook](examples/guestbook) for an example installing Kubernetes Guestbook.
 
+Works with Terraform 0.13+
+
 ### Join the Community and Make Carvel Better
 Carvel is better because of our contributors and maintainers. It is because of you that we can bring great software to the community.
 Please join us during our online community meetings ([Zoom link](http://community.klt.rip/)) every other Wednesday at 12PM ET / 9AM PT and catch up with past meetings on the [VMware YouTube Channel](https://www.youtube.com/playlist?list=PL7bmigfV0EqQ_cDNKVTIcZt-dAM-hpClS).
