@@ -2,7 +2,7 @@
 
 set -e -x -u
 
-export VERSION=0.7.0
+export VERSION=0.7.0 # No v prefix
 
 ./hack/build.sh
 
@@ -18,7 +18,7 @@ mkdir -p tmp/binaries/k14s/$VERSION
 
 	# makes builds reproducible
 	export CGO_ENABLED=0
-	repro_flags="-ldflags=-buildid= -trimpath"
+	repro_flags="-ldflags=-buildid= -trimpath -mod=vendor"
 
 	GOOS=darwin GOARCH=amd64 go build $repro_flags \
 		-o darwin_amd64/terraform-provider-k14s ../../../../cmd/...
