@@ -1,4 +1,4 @@
-provider "k14s" {
+provider "carvel" {
   kapp {
     kubeconfig {
       from_env = true
@@ -6,7 +6,7 @@ provider "k14s" {
   }
 }
 
-data "k14s_ytt" "guestbook" {
+data "carvel_ytt" "guestbook" {
   files = ["."]
   ignore_unknown_comments = true
 
@@ -20,9 +20,9 @@ data "k14s_ytt" "guestbook" {
   EOF
 }
 
-resource "k14s_kapp" "guestbook" {
+resource "carvel_kapp" "guestbook" {
   app = "guestbook"
   namespace = "default"
-  config_yaml = data.k14s_ytt.guestbook.result
+  config_yaml = data.carvel_ytt.guestbook.result
   diff_changes = true
 }

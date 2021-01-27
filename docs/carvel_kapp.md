@@ -1,6 +1,6 @@
-## k14s_kapp
+## carvel_kapp
 
-k14s_kapp resource provides ability to manage set of Kubernetes resources.
+carvel_kapp resource provides ability to manage set of Kubernetes resources.
 
 ### Input Attributes
 
@@ -10,7 +10,7 @@ k14s_kapp resource provides ability to manage set of Kubernetes resources.
 - `files` (list of strings; optional) List of file paths to provide to kapp
 - `diff_changes` (bool; optional) Equivalent to --diff-changes
 - `diff_context` (int; optional) Equivalent to --diff-context
-- `debug_logs` (bool; optional; default=false) Log to `/tmp/terraform-provider-k14s.log`
+- `debug_logs` (bool; optional; default=false) Log to `/tmp/terraform-provider-carvel.log`
 - `deploy` (optional)
   - `raw_options` (list of strings) Raw options to pass to kapp (e.g. `--wait=false`)
 - `delete` (optional)
@@ -24,7 +24,7 @@ k14s_kapp resource provides ability to manage set of Kubernetes resources.
 ### Example
 
 ```yaml
-data "k14s_kapp" "app2" {
+data "carvel_kapp" "app2" {
   app = "app2"
   namespace = "default"
 
@@ -42,7 +42,7 @@ data "k14s_kapp" "app2" {
 ```
 
 ```yaml
-data "k14s_kapp" "app2" {
+data "carvel_kapp" "app2" {
   app = "app2"
   namespace = "default"
 

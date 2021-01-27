@@ -1,17 +1,17 @@
 ![logo](docs/CarvelLogo.png)
 
-# terraform-provider-k14s
+# terraform-provider-carvel
 
 - Slack: [#carvel in Kubernetes slack](https://slack.kubernetes.io)
 - [Docs](docs/README.md) with topics about resources and their attributes, examples
 - Refer to [Install doc](docs/install.md) for setup instructions
 - Status: Experimental
 
-k14s Terraform provider currently includes ability to:
+Carvel Terraform provider currently includes ability to:
 
-- template with [ytt](https://get-ytt.io)
-- resolve image digests with [kbld](https://get-kbld.io)
-- deploy k8s resources with [kapp](https://get-kapp.io)
+- template with [ytt](https://carvel.dev/ytt)
+- resolve image digests with [kbld](https://carvel.dev/kbld)
+- deploy k8s resources with [kapp](https://carvel.dev/kapp)
 
 See [examples/guestbook](examples/guestbook) for an example installing Kubernetes Guestbook.
 
