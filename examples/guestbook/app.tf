@@ -7,7 +7,7 @@ provider "k14s" {
 }
 
 data "k14s_ytt" "guestbook" {
-  files                   = ["yaml"]
+  files                   = ["config"]
   ignore_unknown_comments = true
 
   # Configure all deployments to have 1 replica
