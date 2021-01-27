@@ -20,13 +20,13 @@ Provider configuration currently carries kapp kubeconfig.
 ### Example
 
 ```yaml
-provider "k14s" {}
+provider "carvel" {}
 ```
 
 Use configuration used by kubectl:
 
 ```yaml
-provider "k14s" {
+provider "carvel" {
   kapp {
     kubeconfig {
       from_env = true
@@ -38,7 +38,7 @@ provider "k14s" {
 Use specific context with environment config:
 
 ```yaml
-provider "k14s" {
+provider "carvel" {
   kapp {
     kubeconfig {
       from_env = true
@@ -51,7 +51,7 @@ provider "k14s" {
 Authenticate with username and password:
 
 ```yaml
-provider "k14s" {
+provider "carvel" {
   kapp {
     kubeconfig {
       server = "https://..."
@@ -72,7 +72,7 @@ provider "k14s" {
 Authenticate with client certificate:
 
 ```yaml
-provider "k14s" {
+provider "carvel" {
   kapp {
     kubeconfig {
       server = "https://..."
@@ -93,7 +93,7 @@ provider "k14s" {
 Authenticate with token:
 
 ```yaml
-provider "k14s" {
+provider "carvel" {
   kapp {
     kubeconfig {
       server = "https://..."

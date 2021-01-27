@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/hashicorp/terraform/plugin"
-	"github.com/k14s/terraform-provider-k14s/pkg/provider"
+	"github.com/vmware-tanzu/terraform-provider-carvel/pkg/provider"
 )
 
 func main() {

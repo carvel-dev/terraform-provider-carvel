@@ -1,4 +1,4 @@
-resource "k14s_kapp" "app1" {
+resource "carvel_kapp" "app1" {
   app = "app1"
   namespace = "default"
 
@@ -14,7 +14,7 @@ resource "k14s_kapp" "app1" {
   diff_changes = true
 }
 
-resource "k14s_kapp" "app3" {
+resource "carvel_kapp" "app3" {
   app = "app3"
   namespace = "default"
 

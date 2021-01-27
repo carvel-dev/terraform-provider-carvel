@@ -9,9 +9,9 @@
 
 Carvel Terraform provider currently includes ability to:
 
-- template with [ytt](https://carvel.dev/ytt/)
-- resolve image digests with [kbld](https://carvel.dev/kbld/)
-- deploy k8s resources with [kapp](https://carvel.dev/kapp/)
+- template with [ytt](https://carvel.dev/ytt)
+- resolve image digests with [kbld](https://carvel.dev/kbld)
+- deploy k8s resources with [kapp](https://carvel.dev/kapp)
 
 See [examples/guestbook](examples/guestbook) for an example installing Kubernetes Guestbook.
 

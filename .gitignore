@@ -8,5 +8,5 @@ crash.log
 *.tfstate.lock.info
 *.tfstate.backup
 
-/terraform-provider-k14s
+/terraform-provider-carvel
 /tmp

@@ -1,4 +1,4 @@
-data "k14s_kbld" "tpl1" {
+data "carvel_kbld" "tpl1" {
   config_yaml = <<EOF
     images:
     - image: nginx
@@ -7,5 +7,5 @@ data "k14s_kbld" "tpl1" {
 }
 
 output "kbld_result" {
-  value = "${data.k14s_kbld.tpl1.result}"
+  value = "${data.carvel_kbld.tpl1.result}"
 }

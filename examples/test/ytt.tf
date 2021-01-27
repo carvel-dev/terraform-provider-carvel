@@ -1,4 +1,4 @@
-data "k14s_ytt" "example1" {
+data "carvel_ytt" "example1" {
   files = ["ytt-example"]
 
   config_yaml = <<EOF
@@ -25,5 +25,5 @@ data "k14s_ytt" "example1" {
 
 // See `terraform output` for the result
 output "result" {
-  value = "${data.k14s_ytt.example1.result}"
+  value = "${data.carvel_ytt.example1.result}"
 }

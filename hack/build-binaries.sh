@@ -6,13 +6,13 @@ export VERSION=0.7.0 # No v prefix
 
 ./hack/build.sh
 
-rm -rf tmp/binaries/k14s
-mkdir -p tmp/binaries/k14s/$VERSION
+rm -rf tmp/binaries/carvel
+mkdir -p tmp/binaries/carvel/$VERSION
 
 (
 	set -e
 
-	cd tmp/binaries/k14s/$VERSION
+	cd tmp/binaries/carvel/$VERSION
 	
 	mkdir {darwin_amd64,linux_amd64,windows_amd64}
 
@@ -21,14 +21,14 @@ mkdir -p tmp/binaries/k14s/$VERSION
 	repro_flags="-ldflags=-buildid= -trimpath -mod=vendor"
 
 	GOOS=darwin GOARCH=amd64 go build $repro_flags \
-		-o darwin_amd64/terraform-provider-k14s ../../../../cmd/...
+		-o darwin_amd64/terraform-provider-carvel ../../../../cmd/...
 	GOOS=linux GOARCH=amd64 go build $repro_flags \
-		-o linux_amd64/terraform-provider-k14s ../../../../cmd/...
+		-o linux_amd64/terraform-provider-carvel ../../../../cmd/...
 	GOOS=windows GOARCH=amd64 go build $repro_flags \
-		-o windows_amd64/terraform-provider-k14s ../../../../cmd/...
+		-o windows_amd64/terraform-provider-carvel ../../../../cmd/...
 
 	cd ../../
-	COPYFILE_DISABLE=1 tar czvf ../terraform-provider-k14s-binaries.tgz .
+	COPYFILE_DISABLE=1 tar czvf ../terraform-provider-carvel-binaries.tgz .
 )
 
-shasum -a 256 tmp/terraform-provider-k14s-binaries.tgz
+shasum -a 256 tmp/terraform-provider-carvel-binaries.tgz

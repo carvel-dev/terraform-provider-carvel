@@ -10,7 +10,7 @@ go fmt ./cmd/... ./pkg/...
 go mod vendor
 go mod tidy
 
-go build $repro_flags -o terraform-provider-k14s ./cmd/...
-ls -la ./terraform-provider-k14s
+go build $repro_flags -o terraform-provider-carvel ./cmd/...
+ls -la ./terraform-provider-carvel
 
 echo SUCCESS

@@ -1,4 +1,4 @@
-module github.com/k14s/terraform-provider-k14s
+module github.com/vmware-tanzu/terraform-provider-carvel
 
 go 1.13
 

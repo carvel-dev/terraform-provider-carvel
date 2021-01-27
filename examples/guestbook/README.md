@@ -4,17 +4,17 @@ Files:
 
 - `app.tf`: specifies Terraform config
 - `*.yaml`: specifies guestbook application (configuration copied from https://github.com/kubernetes/examples/tree/f3d89d074fe992d12adb54ad9859a68fe1e1e082/guestbook/all-in-one)
-- `terraform-provider-k14s`: shim script for terraform provider (only necessary for quick provider iteration)
+- `terraform-provider-carvel`: shim script for terraform provider (only necessary for quick provider iteration)
 
 Example output from running `terraform apply`:
 
 ```bash
-$ git clone https://github.com/k14s/terraform-provider-k14s
+$ git clone https://github.com/vmware-tanzu/terraform-provider-carvel
 
-$ cd terraform-provider-k14s/examples/guestbook
+$ cd terraform-provider-carvel/examples/guestbook
 
 $ terraform apply
-data.k14s_ytt.guestbook: Refreshing state...
+data.carvel_ytt.guestbook: Refreshing state...
 
 An execution plan has been generated and is shown below.
 Resource actions are indicated with the following symbols:
@@ -22,8 +22,8 @@ Resource actions are indicated with the following symbols:
 
 Terraform will perform the following actions:
 
-  # k14s_kapp.guestbook will be created
-  + resource "k14s_kapp" "guestbook" {
+  # carvel_kapp.guestbook will be created
+  + resource "carvel_kapp" "guestbook" {
       + app                    = "guestbook"
       + change_diff            = <<~EOT
             Target cluster 'https://35.239.160.185' (nodes: gke-dk-jan-9-default-pool-a218b1c9-55sl, 4+)

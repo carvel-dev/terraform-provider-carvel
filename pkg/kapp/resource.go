@@ -4,8 +4,8 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/k14s/terraform-provider-k14s/pkg/logger"
-	"github.com/k14s/terraform-provider-k14s/pkg/schemamisc"
+	"github.com/vmware-tanzu/terraform-provider-carvel/pkg/logger"
+	"github.com/vmware-tanzu/terraform-provider-carvel/pkg/schemamisc"
 )
 
 type Resource struct {
