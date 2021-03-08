@@ -96,9 +96,14 @@ func (r Resource) Delete(d *schema.ResourceData, meta interface{}) error {
 func (r Resource) CustomizeDiff(diff *schema.ResourceDiff, meta interface{}) error {
 	logger := r.newLogger(diff, "customizeDiff")
 
-	_, _, err := (&Kapp{SettableDiff{diff}, meta.(schemamisc.Context).Kubeconfig, logger}).Diff()
-	if err != nil {
-		r.logger.Error("Ignoring diffing error: %s", err)
+	if len(diff.Id()) == 0 {
+		logger.Debug("running diff for non-id")
+		_, _, err := (&Kapp{SettableDiff{diff}, meta.(schemamisc.Context).Kubeconfig, logger}).Diff()
+		if err != nil {
+			r.logger.Error("Ignoring diffing error: %s", err)
+		}
+	} else {
+		logger.Debug("resource is not new")
 	}
 
 	return nil

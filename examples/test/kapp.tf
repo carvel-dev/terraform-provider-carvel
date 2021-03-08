@@ -12,6 +12,7 @@ resource "carvel_kapp" "app1" {
   EOF
 
   diff_changes = true
+  debug_logs = true
 }
 
 resource "carvel_kapp" "app3" {
@@ -41,4 +42,6 @@ resource "carvel_kapp" "app3" {
       "--wait=false",
     ]
   }
+
+  debug_logs = true
 }
