@@ -15,7 +15,8 @@ Provider configuration currently carries kapp kubeconfig.
     - `client_cert` (string; optional) Client certificate in PEM format (multiline strings are indent-trimmed)
     - `client_key` (string; optional) Client key in PEM format (multiline strings are indent-trimmed)
     - `token` (string; optional) Authentication token
-  - `kubeconfig_yaml` (optional) Kubeconfig as YAML (multiline strings are indent-trimmed)
+  - `kubeconfig_yaml` (string; optional) Kubeconfig as YAML (multiline strings are indent-trimmed)
+  - `diff_preview` (bool; optional) By default diff previews are enabled
 
 ### Example
 

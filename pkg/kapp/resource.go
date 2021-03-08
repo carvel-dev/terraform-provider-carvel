@@ -96,9 +96,23 @@ func (r Resource) Delete(d *schema.ResourceData, meta interface{}) error {
 func (r Resource) CustomizeDiff(diff *schema.ResourceDiff, meta interface{}) error {
 	logger := r.newLogger(diff, "customizeDiff")
 
-	_, _, err := (&Kapp{SettableDiff{diff}, meta.(schemamisc.Context).Kubeconfig, logger}).Diff()
-	if err != nil {
-		r.logger.Error("Ignoring diffing error: %s", err)
+	if !meta.(schemamisc.Context).DiffPreview {
+		logger.Debug("Skipping diff preview")
+		return nil
+	}
+
+	if changeDiffStr, ok := diff.Get(schemaDiffPreview1Key).(string); ok {
+		if len(changeDiffStr) == 0 {
+			logger.Debug("Adding change diff")
+			_, _, err := (&Kapp{SettableDiff{diff, logger}, meta.(schemamisc.Context).Kubeconfig, logger}).Diff()
+			if err != nil {
+				logger.Error("Ignoring diffing error: %s", err)
+			}
+		} else {
+			logger.Debug("Keeping existing change diff1")
+		}
+	} else {
+		logger.Debug("Keeping existing change diff2")
 	}
 
 	return nil
@@ -110,9 +124,14 @@ func (r Resource) clearDiff(d SettableResourceData) {
 		panic(fmt.Sprintf("Updating %s key: %s", schemaClusterDriftDetectedKey, err))
 	}
 
-	err = d.Set(schemaChangeDiffKey, "")
+	err = d.Set(schemaDiffPreview1Key, "")
 	if err != nil {
-		panic(fmt.Sprintf("Updating %s key: %s", schemaChangeDiffKey, err))
+		panic(fmt.Sprintf("Updating %s key: %s", schemaDiffPreview1Key, err))
+	}
+
+	err = d.Set(schemaDiffPreview2Key, "")
+	if err != nil {
+		panic(fmt.Sprintf("Updating %s key: %s", schemaDiffPreview2Key, err))
 	}
 }
 

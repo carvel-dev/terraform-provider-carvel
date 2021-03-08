@@ -4,10 +4,12 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/vmware-tanzu/terraform-provider-carvel/pkg/logger"
 )
 
 type SettableDiff struct {
-	diff *schema.ResourceDiff
+	diff   *schema.ResourceDiff
+	logger logger.Logger
 }
 
 func (d SettableDiff) Get(key string) interface{} {
@@ -22,6 +24,8 @@ func (d SettableDiff) Set(key string, val interface{}) error {
 	if keySchema, found := resourceSchema[key]; found {
 		if keySchema.Computed {
 			return d.diff.SetNew(key, val)
+		} else {
+			d.logger.Debug(fmt.Sprintf("Skip setting %s (not computed)", key))
 		}
 		return nil
 	}

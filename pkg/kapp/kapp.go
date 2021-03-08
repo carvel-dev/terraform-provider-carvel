@@ -90,6 +90,7 @@ func (t *Kapp) Diff() (string, string, error) {
 
 		case 3: // pending changes
 			t.logger.Debug("pending changes found")
+			t.logger.Debug("setting " + schemaClusterDriftDetectedKey)
 
 			err := t.data.Set(schemaClusterDriftDetectedKey, true)
 			if err != nil {
@@ -109,10 +110,18 @@ func (t *Kapp) Diff() (string, string, error) {
 }
 
 func (t *Kapp) setDiff(stdout string) error {
-	err := t.data.Set(schemaChangeDiffKey, stdout)
+	t.logger.Debug(fmt.Sprintf("setting %s/%d", schemaDiffPreview1Key, len(stdout)))
+
+	err := t.data.Set(schemaDiffPreview1Key, stdout)
 	if err != nil {
-		return fmt.Errorf("Updating %s key: %s", schemaChangeDiffKey, err)
+		return fmt.Errorf("Updating %s key: %s", schemaDiffPreview1Key, err)
 	}
+
+	err = t.data.Set(schemaDiffPreview2Key, stdout)
+	if err != nil {
+		return fmt.Errorf("Updating %s key: %s", schemaDiffPreview2Key, err)
+	}
+
 	return nil
 }
 

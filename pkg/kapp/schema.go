@@ -14,14 +14,18 @@ const (
 	schemaDiffChangesKey = "diff_changes"
 	schemaDiffContextKey = "diff_context"
 
-	schemaClusterDriftDetectedKey = "cluster_drift_detected"
-	schemaChangeDiffKey           = "change_diff"
-
 	schemaDebugLogsKey = "debug_logs"
 
 	schemaDeployKey     = "deploy"
 	schemaDeleteKey     = "delete"
 	schemaRawOptionsKey = "raw_options"
+
+	// Fields automatically managed by the kapp resource
+	// (Needed two different diff previews because computed property
+	// updates were not shown during update operation)
+	schemaClusterDriftDetectedKey = "cluster_drift_detected"
+	schemaDiffPreview1Key         = "diff_preview_1"
+	schemaDiffPreview2Key         = "diff_preview_2"
 )
 
 var (
@@ -63,18 +67,6 @@ var (
 			Type:        schema.TypeInt,
 			Description: "Show number of lines around changed lines",
 			Optional:    true,
-		},
-
-		schemaClusterDriftDetectedKey: {
-			Type:        schema.TypeBool,
-			Description: "Internal (forces resource update when detected cluster drift)",
-			Optional:    true,
-			Default:     false,
-		},
-		schemaChangeDiffKey: {
-			Type:        schema.TypeString,
-			Description: "Shows calculated diff",
-			Computed:    true,
 		},
 
 		schemaDebugLogsKey: {
@@ -122,6 +114,25 @@ var (
 					},
 				},
 			},
+		},
+
+		// Fields automatically managed by the kapp resource
+		schemaClusterDriftDetectedKey: {
+			Type:        schema.TypeBool,
+			Description: "Internal (forces resource update when detected cluster drift)",
+			Optional:    true,
+			Default:     false,
+		},
+		schemaDiffPreview1Key: { // Used during create operations
+			Type:        schema.TypeString,
+			Description: "Shows calculated diff (1)",
+			Computed:    true,
+		},
+		schemaDiffPreview2Key: { // Used during update operations
+			Type:        schema.TypeString,
+			Description: "Shows calculated diff (2)",
+			Optional:    true,
+			Default:     "",
 		},
 	}
 )

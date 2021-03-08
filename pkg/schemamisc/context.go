@@ -5,5 +5,6 @@ type Kubeconfig interface {
 }
 
 type Context struct {
-	Kubeconfig Kubeconfig
+	Kubeconfig  Kubeconfig
+	DiffPreview bool
 }

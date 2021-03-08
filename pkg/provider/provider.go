@@ -30,7 +30,21 @@ func Provider() terraform.ResourceProvider {
 		Schema: resourceSchema,
 
 		ConfigureFunc: func(d *schema.ResourceData) (interface{}, error) {
-			return schemamisc.Context{Kubeconfig: NewKubeconfig(d)}, nil
+			return schemamisc.Context{
+				Kubeconfig:  NewKubeconfig(d),
+				DiffPreview: kappDiffPreviewValue(d),
+			}, nil
 		},
 	}
+}
+
+func kappDiffPreviewValue(d *schema.ResourceData) bool {
+	val, ok := d.Get(schemaKappKey).([]interface{})
+	if !ok || len(val) == 0 {
+		return true
+	}
+
+	kapp := val[0].(map[string]interface{})
+
+	return kapp[schemaKappDiffPreviewKey].(bool)
 }

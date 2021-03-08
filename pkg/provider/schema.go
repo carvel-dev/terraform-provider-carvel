@@ -6,6 +6,7 @@ import (
 
 const (
 	schemaKappKey               = "kapp"
+	schemaKappDiffPreviewKey    = "diff_preview"
 	schemaKappKubeconfigKey     = "kubeconfig"
 	schemaKappKubeconfigYAMLKey = "kubeconfig_yaml"
 
@@ -30,6 +31,12 @@ var (
 			MaxItems:    1,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
+					schemaKappDiffPreviewKey: {
+						Type:        schema.TypeBool,
+						Description: "Generate diff previews",
+						Optional:    true,
+						Default:     true,
+					},
 					schemaKappKubeconfigKey: {
 						Type:        schema.TypeList,
 						Description: "kubeconfig used by kapp",
