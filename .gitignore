@@ -1,7 +1,7 @@
 .DS_Store
 
 crash.log
-/examples/test/debug.stderr.log
+debug.stderr.log
 
 .terraform/
 *.tfstate
