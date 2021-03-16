@@ -19,7 +19,7 @@ carvel_kapp resource provides ability to manage set of Kubernetes resources.
 ### Computed Attributes
 
 - `cluster_drift_detected` (bool) Set to true when kapp detects there are non-matching changes in the cluster compared to provided configuration
-- `change_diff` (string) Shows diff output from kapp
+- `diff_preview_1`, `diff_preview_2` (string) Shows diff output from kapp
 
 ### Example
 
