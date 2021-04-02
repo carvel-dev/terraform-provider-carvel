@@ -5,8 +5,11 @@ import (
 )
 
 const (
-	schemaKappKey               = "kapp"
-	schemaKappDiffPreviewKey    = "diff_preview"
+	schemaKappKey = "kapp"
+
+	schemaKappDiffPreviewKey     = "alpha_diff_preview"
+	schemaKappDiffPreviewDefault = false
+
 	schemaKappKubeconfigKey     = "kubeconfig"
 	schemaKappKubeconfigYAMLKey = "kubeconfig_yaml"
 
@@ -21,6 +24,17 @@ const (
 	schemaKappKubeconfigTokenKey      = "token"
 )
 
+func kappDiffPreviewValue(d *schema.ResourceData) bool {
+	val, ok := d.Get(schemaKappKey).([]interface{})
+	if !ok || len(val) == 0 {
+		return schemaKappDiffPreviewDefault
+	}
+
+	kapp := val[0].(map[string]interface{})
+
+	return kapp[schemaKappDiffPreviewKey].(bool)
+}
+
 var (
 	resourceSchema = map[string]*schema.Schema{
 		schemaKappKey: {
@@ -33,9 +47,9 @@ var (
 				Schema: map[string]*schema.Schema{
 					schemaKappDiffPreviewKey: {
 						Type:        schema.TypeBool,
-						Description: "Generate diff previews",
+						Description: "Generate diff previews (alpha feature; known to panic terraform)",
 						Optional:    true,
-						Default:     true,
+						Default:     schemaKappDiffPreviewDefault,
 					},
 					schemaKappKubeconfigKey: {
 						Type:        schema.TypeList,

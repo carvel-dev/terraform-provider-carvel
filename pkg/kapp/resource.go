@@ -33,7 +33,9 @@ func (r Resource) Create(d *schema.ResourceData, meta interface{}) error {
 	r.clearDiff(d)
 	defer r.clearDiff(d)
 
-	_, _, err := (&Kapp{d, meta.(schemamisc.Context).Kubeconfig, logger}).Deploy()
+	ctx := meta.(schemamisc.Context)
+
+	_, _, err := (&Kapp{d, ctx.Kubeconfig, ctx.DiffPreview, logger}).Deploy()
 	if err != nil {
 		return fmt.Errorf("Creating %s: %s", r.id(d), err)
 	}
@@ -48,8 +50,10 @@ func (r Resource) Read(d *schema.ResourceData, meta interface{}) error {
 
 	r.clearDiff(d)
 
+	ctx := meta.(schemamisc.Context)
+
 	// Updates revision to indicate change
-	_, _, err := (&Kapp{d, meta.(schemamisc.Context).Kubeconfig, logger}).Diff()
+	_, _, err := (&Kapp{d, ctx.Kubeconfig, ctx.DiffPreview, logger}).Diff()
 	if err != nil {
 		r.logger.Error("Ignoring diffing error: %s", err)
 		// TODO ignore diffing error since it might
@@ -70,7 +74,9 @@ func (r Resource) Update(d *schema.ResourceData, meta interface{}) error {
 	r.clearDiff(d)
 	defer r.clearDiff(d)
 
-	_, _, err := (&Kapp{d, meta.(schemamisc.Context).Kubeconfig, logger}).Deploy()
+	ctx := meta.(schemamisc.Context)
+
+	_, _, err := (&Kapp{d, ctx.Kubeconfig, ctx.DiffPreview, logger}).Deploy()
 	if err != nil {
 		return fmt.Errorf("Updating %s: %s", r.id(d), err)
 	}
@@ -83,7 +89,9 @@ func (r Resource) Delete(d *schema.ResourceData, meta interface{}) error {
 
 	r.clearDiff(d)
 
-	_, _, err := (&Kapp{d, meta.(schemamisc.Context).Kubeconfig, logger}).Delete()
+	ctx := meta.(schemamisc.Context)
+
+	_, _, err := (&Kapp{d, ctx.Kubeconfig, ctx.DiffPreview, logger}).Delete()
 	if err != nil {
 		return fmt.Errorf("Deleting %s: %s", r.id(d), err)
 	}
@@ -104,7 +112,8 @@ func (r Resource) CustomizeDiff(diff *schema.ResourceDiff, meta interface{}) err
 	if changeDiffStr, ok := diff.Get(schemaDiffPreview1Key).(string); ok {
 		if len(changeDiffStr) == 0 {
 			logger.Debug("Adding change diff")
-			_, _, err := (&Kapp{SettableDiff{diff, logger}, meta.(schemamisc.Context).Kubeconfig, logger}).Diff()
+			ctx := meta.(schemamisc.Context)
+			_, _, err := (&Kapp{SettableDiff{diff, logger}, ctx.Kubeconfig, ctx.DiffPreview, logger}).Diff()
 			if err != nil {
 				logger.Error("Ignoring diffing error: %s", err)
 			}

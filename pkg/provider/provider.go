@@ -37,14 +37,3 @@ func Provider() terraform.ResourceProvider {
 		},
 	}
 }
-
-func kappDiffPreviewValue(d *schema.ResourceData) bool {
-	val, ok := d.Get(schemaKappKey).([]interface{})
-	if !ok || len(val) == 0 {
-		return true
-	}
-
-	kapp := val[0].(map[string]interface{})
-
-	return kapp[schemaKappDiffPreviewKey].(bool)
-}

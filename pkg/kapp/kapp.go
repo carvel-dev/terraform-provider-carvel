@@ -29,9 +29,10 @@ type Kubeconfig interface {
 var _ ResourceData = &schema.ResourceData{}
 
 type Kapp struct {
-	data       SettableResourceData
-	kubeconfig Kubeconfig
-	logger     logger.Logger
+	data        SettableResourceData
+	kubeconfig  Kubeconfig
+	diffPreview bool
+	logger      logger.Logger
 }
 
 func (t *Kapp) Deploy() (string, string, error) {
@@ -97,7 +98,7 @@ func (t *Kapp) Diff() (string, string, error) {
 				return "", "", fmt.Errorf("Updating revision key: %s", err)
 			}
 
-			return "", "", t.setDiff(stdoutBs.String())
+			return "", "", t.setDiffPreview(stdoutBs.String())
 
 		default:
 			return "", stderrStr, fmt.Errorf("Executing kapp: Expected specific "+
@@ -109,7 +110,14 @@ func (t *Kapp) Diff() (string, string, error) {
 		"but was %s (stderr: %s)", err, stderrStr)
 }
 
-func (t *Kapp) setDiff(stdout string) error {
+func (t *Kapp) setDiffPreview(stdout string) error {
+	t.logger.Debug(fmt.Sprintf("diff preview:\n\n%s", stdout))
+
+	if !t.diffPreview {
+		t.logger.Debug("skipping setting diff preview")
+		return nil
+	}
+
 	t.logger.Debug(fmt.Sprintf("setting %s/%d", schemaDiffPreview1Key, len(stdout)))
 
 	err := t.data.Set(schemaDiffPreview1Key, stdout)
