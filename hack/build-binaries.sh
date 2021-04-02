@@ -2,7 +2,7 @@
 
 set -e -x -u
 
-export VERSION=0.7.0 # No v prefix
+export VERSION=0.8.0 # No v prefix
 
 ./hack/build.sh
 
