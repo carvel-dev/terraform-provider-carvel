@@ -31,9 +31,17 @@ func Provider() terraform.ResourceProvider {
 
 		ConfigureFunc: func(d *schema.ResourceData) (interface{}, error) {
 			return schemamisc.Context{
-				Kubeconfig:  NewKubeconfig(d),
-				DiffPreview: kappDiffPreviewValue(d),
+				Kubeconfig:        NewKubeconfig(d),
+				DiffPreviewLogger: kappDiffPreviewOutputFileLogger(d),
 			}, nil
 		},
 	}
+}
+
+func kappDiffPreviewOutputFileLogger(d *schema.ResourceData) logger.Logger {
+	path := kappDiffPreviewOutputFileValue(d)
+	if len(path) > 0 {
+		return logger.MustNewFileRootTruncated(path)
+	}
+	return logger.NewNoop()
 }

@@ -16,7 +16,7 @@ Provider configuration currently carries kapp kubeconfig.
     - `client_key` (string; optional) Client key in PEM format (multiline strings are indent-trimmed)
     - `token` (string; optional) Authentication token
   - `kubeconfig_yaml` (string; optional) Kubeconfig as YAML (multiline strings are indent-trimmed)
-  - `alpha_diff_preview` (bool; optional) By default diff previews are disabled. This alpha feature has previously caused terraform panics. You can view changes within debug log (see `carvel_kapp` resource for more info).
+  - `diff_output_file` (string; optional) Path to a file that will contan kapp diffs. This file will be truncated each time provider starts.
 
 ### Example
 

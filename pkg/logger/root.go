@@ -27,6 +27,15 @@ func NewFileRoot(path string) (*Root, error) {
 	return NewRoot(f), nil
 }
 
+func MustNewFileRootTruncated(path string) *Root {
+	f, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0600)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	return NewRoot(f)
+}
+
 func MustNewFileRoot(path string) *Root {
 	logger, err := NewFileRoot(path)
 	if err != nil {

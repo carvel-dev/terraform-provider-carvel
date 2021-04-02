@@ -29,10 +29,10 @@ type Kubeconfig interface {
 var _ ResourceData = &schema.ResourceData{}
 
 type Kapp struct {
-	data        SettableResourceData
-	kubeconfig  Kubeconfig
-	diffPreview bool
-	logger      logger.Logger
+	data       SettableResourceData
+	kubeconfig Kubeconfig
+	diffLogger logger.Logger
+	logger     logger.Logger
 }
 
 func (t *Kapp) Deploy() (string, string, error) {
@@ -87,10 +87,13 @@ func (t *Kapp) Diff() (string, string, error) {
 		switch exitError.ExitCode() {
 		case 2: // no changes
 			t.logger.Debug("no changes found")
+			t.diffLogger.Debug("no changes found")
 			return "", "", nil
 
 		case 3: // pending changes
 			t.logger.Debug("pending changes found")
+			t.diffLogger.Debug(fmt.Sprintf("pending changes found, diff:\n\n%s", stdoutBs.String()))
+
 			t.logger.Debug("setting " + schemaClusterDriftDetectedKey)
 
 			err := t.data.Set(schemaClusterDriftDetectedKey, true)
@@ -98,7 +101,7 @@ func (t *Kapp) Diff() (string, string, error) {
 				return "", "", fmt.Errorf("Updating revision key: %s", err)
 			}
 
-			return "", "", t.setDiffPreview(stdoutBs.String())
+			return "", "", nil
 
 		default:
 			return "", stderrStr, fmt.Errorf("Executing kapp: Expected specific "+
@@ -108,29 +111,6 @@ func (t *Kapp) Diff() (string, string, error) {
 
 	return "", stderrStr, fmt.Errorf("Executing kapp: Expected exit error, "+
 		"but was %s (stderr: %s)", err, stderrStr)
-}
-
-func (t *Kapp) setDiffPreview(stdout string) error {
-	t.logger.Debug(fmt.Sprintf("diff preview:\n\n%s", stdout))
-
-	if !t.diffPreview {
-		t.logger.Debug("skipping setting diff preview")
-		return nil
-	}
-
-	t.logger.Debug(fmt.Sprintf("setting %s/%d", schemaDiffPreview1Key, len(stdout)))
-
-	err := t.data.Set(schemaDiffPreview1Key, stdout)
-	if err != nil {
-		return fmt.Errorf("Updating %s key: %s", schemaDiffPreview1Key, err)
-	}
-
-	err = t.data.Set(schemaDiffPreview2Key, stdout)
-	if err != nil {
-		return fmt.Errorf("Updating %s key: %s", schemaDiffPreview2Key, err)
-	}
-
-	return nil
 }
 
 func (t *Kapp) Delete() (string, string, error) {

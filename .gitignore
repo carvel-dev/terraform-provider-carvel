@@ -2,6 +2,7 @@
 
 crash.log
 debug.stderr.log
+kapp.diff.log
 
 .terraform/
 *.tfstate

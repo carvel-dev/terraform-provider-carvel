@@ -26,7 +26,7 @@ func NewResource(logger logger.Logger) *schema.Resource {
 }
 
 func (r Resource) Create(d *schema.ResourceData, meta interface{}) error {
-	logger := r.newLogger(d, "create")
+	logger, diffLogger := r.newLogger(d, meta, "create")
 
 	d.SetId(r.id(d))
 
@@ -35,7 +35,7 @@ func (r Resource) Create(d *schema.ResourceData, meta interface{}) error {
 
 	ctx := meta.(schemamisc.Context)
 
-	_, _, err := (&Kapp{d, ctx.Kubeconfig, ctx.DiffPreview, logger}).Deploy()
+	_, _, err := (&Kapp{d, ctx.Kubeconfig, diffLogger, logger}).Deploy()
 	if err != nil {
 		return fmt.Errorf("Creating %s: %s", r.id(d), err)
 	}
@@ -44,7 +44,7 @@ func (r Resource) Create(d *schema.ResourceData, meta interface{}) error {
 }
 
 func (r Resource) Read(d *schema.ResourceData, meta interface{}) error {
-	logger := r.newLogger(d, "read")
+	logger, diffLogger := r.newLogger(d, meta, "read")
 
 	d.SetId(r.id(d))
 
@@ -53,7 +53,7 @@ func (r Resource) Read(d *schema.ResourceData, meta interface{}) error {
 	ctx := meta.(schemamisc.Context)
 
 	// Updates revision to indicate change
-	_, _, err := (&Kapp{d, ctx.Kubeconfig, ctx.DiffPreview, logger}).Diff()
+	_, _, err := (&Kapp{d, ctx.Kubeconfig, diffLogger, logger}).Diff()
 	if err != nil {
 		r.logger.Error("Ignoring diffing error: %s", err)
 		// TODO ignore diffing error since it might
@@ -66,7 +66,7 @@ func (r Resource) Read(d *schema.ResourceData, meta interface{}) error {
 }
 
 func (r Resource) Update(d *schema.ResourceData, meta interface{}) error {
-	logger := r.newLogger(d, "update")
+	logger, diffLogger := r.newLogger(d, meta, "update")
 
 	// TODO do we need to set this?
 	d.SetId(r.id(d))
@@ -76,7 +76,7 @@ func (r Resource) Update(d *schema.ResourceData, meta interface{}) error {
 
 	ctx := meta.(schemamisc.Context)
 
-	_, _, err := (&Kapp{d, ctx.Kubeconfig, ctx.DiffPreview, logger}).Deploy()
+	_, _, err := (&Kapp{d, ctx.Kubeconfig, diffLogger, logger}).Deploy()
 	if err != nil {
 		return fmt.Errorf("Updating %s: %s", r.id(d), err)
 	}
@@ -85,13 +85,13 @@ func (r Resource) Update(d *schema.ResourceData, meta interface{}) error {
 }
 
 func (r Resource) Delete(d *schema.ResourceData, meta interface{}) error {
-	logger := r.newLogger(d, "delete")
+	logger, diffLogger := r.newLogger(d, meta, "delete")
 
 	r.clearDiff(d)
 
 	ctx := meta.(schemamisc.Context)
 
-	_, _, err := (&Kapp{d, ctx.Kubeconfig, ctx.DiffPreview, logger}).Delete()
+	_, _, err := (&Kapp{d, ctx.Kubeconfig, diffLogger, logger}).Delete()
 	if err != nil {
 		return fmt.Errorf("Deleting %s: %s", r.id(d), err)
 	}
@@ -102,26 +102,13 @@ func (r Resource) Delete(d *schema.ResourceData, meta interface{}) error {
 }
 
 func (r Resource) CustomizeDiff(diff *schema.ResourceDiff, meta interface{}) error {
-	logger := r.newLogger(diff, "customizeDiff")
+	logger, diffLogger := r.newLogger(diff, meta, "customizeDiff")
 
-	if !meta.(schemamisc.Context).DiffPreview {
-		logger.Debug("Skipping diff preview")
-		return nil
-	}
+	ctx := meta.(schemamisc.Context)
 
-	if changeDiffStr, ok := diff.Get(schemaDiffPreview1Key).(string); ok {
-		if len(changeDiffStr) == 0 {
-			logger.Debug("Adding change diff")
-			ctx := meta.(schemamisc.Context)
-			_, _, err := (&Kapp{SettableDiff{diff, logger}, ctx.Kubeconfig, ctx.DiffPreview, logger}).Diff()
-			if err != nil {
-				logger.Error("Ignoring diffing error: %s", err)
-			}
-		} else {
-			logger.Debug("Keeping existing change diff1")
-		}
-	} else {
-		logger.Debug("Keeping existing change diff2")
+	_, _, err := (&Kapp{SettableDiff{diff, logger}, ctx.Kubeconfig, diffLogger, logger}).Diff()
+	if err != nil {
+		logger.Error("Ignoring diffing error: %s", err)
 	}
 
 	return nil
@@ -132,25 +119,19 @@ func (r Resource) clearDiff(d SettableResourceData) {
 	if err != nil {
 		panic(fmt.Sprintf("Updating %s key: %s", schemaClusterDriftDetectedKey, err))
 	}
-
-	err = d.Set(schemaDiffPreview1Key, "")
-	if err != nil {
-		panic(fmt.Sprintf("Updating %s key: %s", schemaDiffPreview1Key, err))
-	}
-
-	err = d.Set(schemaDiffPreview2Key, "")
-	if err != nil {
-		panic(fmt.Sprintf("Updating %s key: %s", schemaDiffPreview2Key, err))
-	}
 }
 
-func (r Resource) newLogger(d ResourceData, desc string) logger.Logger {
+func (r Resource) newLogger(d ResourceData, meta interface{}, desc string) (logger.Logger, logger.Logger) {
+	var logger logger.Logger = logger.NewNoop()
+
 	if d.Get(schemaDebugLogsKey).(bool) {
-		logger := r.logger.WithLabel(r.id(d)).WithLabel(desc)
+		logger = r.logger.WithLabel(r.id(d)).WithLabel(desc)
 		logger.Debug("started")
-		return logger
 	}
-	return logger.NewNoop()
+
+	diffLogger := meta.(schemamisc.Context).DiffPreviewLogger
+
+	return logger, diffLogger.WithLabel(r.id(d)).WithLabel(desc)
 }
 
 func (r Resource) id(d ResourceData) string {
