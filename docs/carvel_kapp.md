@@ -24,7 +24,7 @@ carvel_kapp resource provides ability to manage set of Kubernetes resources.
 ### Example
 
 ```yaml
-data "carvel_kapp" "app2" {
+resource "carvel_kapp" "app2" {
   app = "app2"
   namespace = "default"
 
@@ -42,7 +42,7 @@ data "carvel_kapp" "app2" {
 ```
 
 ```yaml
-data "carvel_kapp" "app2" {
+resource "carvel_kapp" "app2" {
   app = "app2"
   namespace = "default"
 
