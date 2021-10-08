@@ -11,6 +11,7 @@ builds:
     # they are unable to install libraries.
     - CGO_ENABLED=0
   mod_timestamp: '{{ .CommitTimestamp }}'
+  main: ./cmd
   flags:
     - -trimpath
   ldflags:
