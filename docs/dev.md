@@ -1,0 +1,70 @@
+## Terraform Registry
+
+Provider is published to Terraform registry.
+
+Associated PGP public key:
+
+```
+-----BEGIN PGP PUBLIC KEY BLOCK-----
+Version: GnuPG v2
+
+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
+=xWPI
+-----END PGP PUBLIC KEY BLOCK-----
+```
+
+```
+$ gpg2 --list-secret-keys --keyid-format=long
+/root/.gnupg/pubring.kbx
+------------------------
+sec   rsa4096/9FD834C948074CE9 2021-10-07 [SC] [expires: 2023-10-07]
+uid                 [ultimate] Carvel (https://github.com/vmware-tanzu/terraform-provider-carvel) <185847+cppforlife@users.noreply.github.com>
+ssb   rsa4096/D43C93038C699E0F 2021-10-07 [E] [expires: 2023-10-07]
+```
