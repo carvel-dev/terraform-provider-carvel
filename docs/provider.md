@@ -20,6 +20,19 @@ Provider configuration currently carries kapp kubeconfig.
 
 ### Example
 
+Use published provider to Terraform registry:
+
+```yaml
+terraform {
+  required_providers {
+    carvel = {
+      source  = "vmware-tanzu/carvel"
+      version = "0.10.0" // or pick version (started publishing v0.10.0+)
+    }
+  }
+}
+```
+
 ```yaml
 provider "carvel" {}
 ```

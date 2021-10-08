@@ -1,0 +1,6 @@
+#@ load("@ytt:data", "data")
+
+int: #@ data.values.int
+str: #@ data.values.str
+values: #@ data.values
+str2: inlinestr
