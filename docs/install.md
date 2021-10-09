@@ -1,14 +1,7 @@
 ## Install
 
-[Terraform docs](https://www.terraform.io/docs/configuration/providers.html#third-party-plugins) for installing third party providers.
+As of v0.10.0+, Carvel provider is published to Terraform Registry: https://registry.terraform.io/providers/vmware-tanzu/carvel/latest
 
-Grab prebuilt binaries from the [Releases page](https://github.com/vmware-tanzu/terraform-provider-carvel/releases).
+Depending on the resource you are planning to use (ytt, kbld, kapp), you will have to install those projects' binaries and make them available on $PATH. See [carvel.dev](https://carvel.dev) for installation instructions.
 
-Once you have downloaded `terraform-provider-carvel-binaries.tgz`, install it for terraform to find it:
-
-```bash
-mkdir -p ~/.terraform.d/plugins
-tar xzvf ~/Downloads/terraform-provider-carvel-binaries.tgz -C ~/.terraform.d/plugins/
-```
-
-Depending on the resource you are planning to use (ytt, kbld, kapp), you will have to install those projects' binaries. See [carvel.dev](https://carvel.dev) for installation instructions.
+If you would like to use this provider on Terraform Cloud, recommended approach (at this point) is to include used binaries (ytt, kbld, kapp...) in a separate Git repository as a submodule to your project and configure $PATH to pick them up.

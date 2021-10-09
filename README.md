@@ -13,11 +13,12 @@ Carvel Terraform provider currently includes ability to:
 - resolve image digests with [kbld](https://carvel.dev/kbld)
 - deploy k8s resources with [kapp](https://carvel.dev/kapp)
 
-See [examples/guestbook](examples/guestbook) for an example installing Kubernetes Guestbook.
+See [examples/test-published-provider](examples/test-published-provider) for an example using various resources.
 
 Works with Terraform 0.13+
 
 ### Join the Community and Make Carvel Better
+
 Carvel is better because of our contributors and maintainers. It is because of you that we can bring great software to the community.
 Please join us during our online community meetings. Details can be found on our [Carvel website](https://carvel.dev/community/).
 
