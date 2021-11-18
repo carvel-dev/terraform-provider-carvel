@@ -1,9 +1,8 @@
 terraform {
   required_providers {
     carvel = {
-      // Local provider
-      source  = "carvel.dev/carvel/k14s"
-      version = "0.7.0"
+      source  = "vmware-tanzu/carvel"
+      version = "0.10.0"
     }
   }
 }
