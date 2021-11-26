@@ -8,7 +8,6 @@ provider "carvel" {
 
 data "carvel_ytt" "guestbook" {
   files = ["ytt-config"]
-  ignore_unknown_comments = true
 
   # Configure all deployments to have 1 replica
   config_yaml = <<EOF

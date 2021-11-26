@@ -8,4 +8,5 @@ data "carvel_kbld" "tpl1" {
 
 output "kbld_result" {
   value = data.carvel_kbld.tpl1.result
+  sensitive = true
 }

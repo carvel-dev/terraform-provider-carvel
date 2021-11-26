@@ -26,4 +26,5 @@ data "carvel_ytt" "example1" {
 // See `terraform output` for the result
 output "result" {
   value = data.carvel_ytt.example1.result
+  sensitive = true
 }

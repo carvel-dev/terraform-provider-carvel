@@ -1,5 +1,0 @@
-#!/bin/bash
-
-set -e
-
-../../terraform-provider-carvel 2>>debug.stderr.log
