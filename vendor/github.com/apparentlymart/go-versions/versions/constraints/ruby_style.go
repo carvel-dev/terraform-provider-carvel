@@ -84,6 +84,9 @@ func ParseRubyStyleMulti(str string) (IntersectionSpec, error) {
 		remain = strings.TrimSpace(newRemain)
 
 		if remain != "" {
+			if strings.HasPrefix(remain, "v") {
+				return nil, fmt.Errorf(`a "v" prefix should not be used`)
+			}
 			if !strings.HasPrefix(remain, ",") {
 				return nil, fmt.Errorf("missing comma after %q", consumed)
 			}
