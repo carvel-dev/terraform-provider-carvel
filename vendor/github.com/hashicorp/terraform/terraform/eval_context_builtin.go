@@ -71,6 +71,7 @@ type BuiltinEvalContext struct {
 	ProvisionerLock       *sync.Mutex
 	ChangesValue          *plans.ChangesSync
 	StateValue            *states.SyncState
+	RefreshStateValue     *states.SyncState
 	InstanceExpanderValue *instances.Expander
 }
 
@@ -78,8 +79,8 @@ type BuiltinEvalContext struct {
 var _ EvalContext = (*BuiltinEvalContext)(nil)
 
 func (ctx *BuiltinEvalContext) WithPath(path addrs.ModuleInstance) EvalContext {
-	ctx.pathSet = true
 	newCtx := *ctx
+	newCtx.pathSet = true
 	newCtx.PathValue = path
 	return &newCtx
 }
@@ -227,10 +228,10 @@ func (ctx *BuiltinEvalContext) SetProviderInput(pc addrs.AbsProviderConfig, c ma
 	ctx.ProviderLock.Unlock()
 }
 
-func (ctx *BuiltinEvalContext) InitProvisioner(n string) (provisioners.Interface, error) {
+func (ctx *BuiltinEvalContext) InitProvisioner(n string) error {
 	// If we already initialized, it is an error
 	if p := ctx.Provisioner(n); p != nil {
-		return nil, fmt.Errorf("Provisioner '%s' already initialized", n)
+		return fmt.Errorf("Provisioner '%s' already initialized", n)
 	}
 
 	// Warning: make sure to acquire these locks AFTER the call to Provisioner
@@ -240,12 +241,12 @@ func (ctx *BuiltinEvalContext) InitProvisioner(n string) (provisioners.Interface
 
 	p, err := ctx.Components.ResourceProvisioner(n)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	ctx.ProvisionerCache[n] = p
 
-	return p, nil
+	return nil
 }
 
 func (ctx *BuiltinEvalContext) Provisioner(n string) provisioners.Interface {
@@ -296,7 +297,19 @@ func (ctx *BuiltinEvalContext) EvaluationScope(self addrs.Referenceable, keyData
 		InstanceKeyData: keyData,
 		Operation:       ctx.Evaluator.Operation,
 	}
-	return ctx.Evaluator.Scope(data, self)
+	scope := ctx.Evaluator.Scope(data, self)
+
+	// ctx.PathValue is the path of the module that contains whatever
+	// expression the caller will be trying to evaluate, so this will
+	// activate only the experiments from that particular module, to
+	// be consistent with how experiment checking in the "configs"
+	// package itself works. The nil check here is for robustness in
+	// incompletely-mocked testing situations; mc should never be nil in
+	// real situations.
+	if mc := ctx.Evaluator.Config.DescendentForInstance(ctx.PathValue); mc != nil {
+		scope.SetActiveExperiments(mc.Module.ActiveExperiments)
+	}
+	return scope
 }
 
 func (ctx *BuiltinEvalContext) Path() addrs.ModuleInstance {
@@ -348,6 +361,10 @@ func (ctx *BuiltinEvalContext) Changes() *plans.ChangesSync {
 
 func (ctx *BuiltinEvalContext) State() *states.SyncState {
 	return ctx.StateValue
+}
+
+func (ctx *BuiltinEvalContext) RefreshState() *states.SyncState {
+	return ctx.RefreshStateValue
 }
 
 func (ctx *BuiltinEvalContext) InstanceExpander() *instances.Expander {

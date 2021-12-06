@@ -46,6 +46,7 @@ type GraphNodeAttachDependencies interface {
 // graphNodeDependsOn is implemented by resources that need to expose any
 // references set via DependsOn in their configuration.
 type graphNodeDependsOn interface {
+	GraphNodeReferencer
 	DependsOn() []*addrs.Reference
 }
 
@@ -300,7 +301,7 @@ func (m ReferenceMap) References(v dag.Vertex) []dag.Vertex {
 			case addrs.ModuleCallInstance:
 				subject = ri.Call
 			default:
-				log.Printf("[WARN] ReferenceTransformer: reference not found: %q", subject)
+				log.Printf("[INFO] ReferenceTransformer: reference not found: %q", subject)
 				continue
 			}
 			key = m.referenceMapKey(v, subject)
@@ -326,6 +327,9 @@ func (m ReferenceMap) dependsOn(g *Graph, depender graphNodeDependsOn) ([]dag.Ve
 	fromModule := false
 
 	refs := depender.DependsOn()
+
+	// get any implied dependencies for data sources
+	refs = append(refs, m.dataDependsOn(depender)...)
 
 	// This is where we record that a module has depends_on configured.
 	if _, ok := depender.(*nodeExpandModule); ok && len(refs) > 0 {
@@ -365,10 +369,44 @@ func (m ReferenceMap) dependsOn(g *Graph, depender graphNodeDependsOn) ([]dag.Ve
 	return res, fromModule || fromParentModule
 }
 
+// Return extra depends_on references if this is a data source.
+// For data sources we implicitly treat references to managed resources as
+// depends_on entries. If a data source references a managed resource, even if
+// that reference is resolvable, it stands to reason that the user intends for
+// the data source to require that resource in some way.
+func (m ReferenceMap) dataDependsOn(depender graphNodeDependsOn) []*addrs.Reference {
+	var refs []*addrs.Reference
+	if n, ok := depender.(GraphNodeConfigResource); ok &&
+		n.ResourceAddr().Resource.Mode == addrs.DataResourceMode {
+		for _, r := range depender.References() {
+
+			var resAddr addrs.Resource
+			switch s := r.Subject.(type) {
+			case addrs.Resource:
+				resAddr = s
+			case addrs.ResourceInstance:
+				resAddr = s.Resource
+				r.Subject = resAddr
+			}
+
+			if resAddr.Mode != addrs.ManagedResourceMode {
+				// We only want to wait on directly referenced managed resources.
+				// Data sources have no external side effects, so normal
+				// references to them in the config will suffice for proper
+				// ordering.
+				continue
+			}
+
+			refs = append(refs, r)
+		}
+	}
+	return refs
+}
+
 // parentModuleDependsOn returns the set of vertices that a data sources parent
 // module references through the module call's depends_on. The bool return
 // value indicates if depends_on was found in a parent module configuration.
-func (n ReferenceMap) parentModuleDependsOn(g *Graph, depender graphNodeDependsOn) ([]dag.Vertex, bool) {
+func (m ReferenceMap) parentModuleDependsOn(g *Graph, depender graphNodeDependsOn) ([]dag.Vertex, bool) {
 	var res []dag.Vertex
 	fromModule := false
 
@@ -382,7 +420,7 @@ func (n ReferenceMap) parentModuleDependsOn(g *Graph, depender graphNodeDependsO
 			continue
 		}
 
-		deps, fromParentModule := n.dependsOn(g, mod)
+		deps, fromParentModule := m.dependsOn(g, mod)
 		for _, dep := range deps {
 			// add the dependency
 			res = append(res, dep)
@@ -513,124 +551,4 @@ func modulePrefixList(result []string, prefix string) []string {
 	}
 
 	return result
-}
-
-// destroyNodeReferenceFixupTransformer is a GraphTransformer that connects all
-// temporary values to any destroy instances of their references. This ensures
-// that they are evaluated after the destroy operations of all instances, since
-// the evaluator will currently return data from instances that are scheduled
-// for deletion.
-//
-// This breaks the rules that destroy nodes are not referencable, and can cause
-// cycles in the current graph structure. The cycles however are usually caused
-// by passing through a provider node, and that is the specific case we do not
-// want to wait for destroy evaluation since the evaluation result may need to
-// be used in the provider for a full destroy operation.
-//
-// Once the evaluator can again ignore any instances scheduled for deletion,
-// this transformer should be removed.
-type applyDestroyNodeReferenceFixupTransformer struct{}
-
-func (t *applyDestroyNodeReferenceFixupTransformer) Transform(g *Graph) error {
-	// Create mapping of destroy nodes by address.
-	// Because the values which are providing the references won't yet be
-	// expanded, we need to index these by configuration address, rather than
-	// absolute.
-	destroyers := map[string][]dag.Vertex{}
-	for _, v := range g.Vertices() {
-		if v, ok := v.(GraphNodeDestroyer); ok {
-			addr := v.DestroyAddr().ContainingResource().Config().String()
-			destroyers[addr] = append(destroyers[addr], v)
-		}
-	}
-	_ = destroyers
-
-	// nothing being destroyed
-	if len(destroyers) == 0 {
-		return nil
-	}
-
-	// Now find any temporary values (variables, locals, outputs) that might
-	// reference the resources with instances being destroyed.
-	for _, v := range g.Vertices() {
-		rn, ok := v.(GraphNodeReferencer)
-		if !ok {
-			continue
-		}
-
-		// we only want temporary value referencers
-		if _, ok := v.(graphNodeTemporaryValue); !ok {
-			continue
-		}
-
-		modulePath := rn.ModulePath()
-
-		// If this value is possibly consumed by a provider configuration, we
-		// must attempt to evaluate early during a full destroy, and cannot
-		// wait on the resource destruction. This would also likely cause a
-		// cycle in most configurations.
-		des, _ := g.Descendents(rn)
-		providerDescendant := false
-		for _, v := range des {
-			if _, ok := v.(GraphNodeProvider); ok {
-				providerDescendant = true
-				break
-			}
-		}
-
-		if providerDescendant {
-			log.Printf("[WARN] Value %q has provider descendant, not waiting on referenced destroy instance", dag.VertexName(rn))
-			continue
-		}
-
-		refs := rn.References()
-		for _, ref := range refs {
-
-			var addr addrs.ConfigResource
-			// get the configuration level address for this reference, since
-			// that is how we indexed the destroyers
-			switch tr := ref.Subject.(type) {
-			case addrs.Resource:
-				addr = addrs.ConfigResource{
-					Module:   modulePath,
-					Resource: tr,
-				}
-			case addrs.ResourceInstance:
-				addr = addrs.ConfigResource{
-					Module:   modulePath,
-					Resource: tr.ContainingResource(),
-				}
-			default:
-				// this is not a resource reference
-				continue
-			}
-
-			// see if there are any destroyers registered for this address
-			for _, dest := range destroyers[addr.String()] {
-				// check that we are not introducing a cycle, by looking for
-				// our own node in the ancestors of the destroy node.
-				// This should theoretically only happen if we had a provider
-				// descendant which was checked already, but since this edge is
-				// being added outside the normal rules of the graph, check
-				// again to be certain.
-				anc, _ := g.Ancestors(dest)
-				cycle := false
-				for _, a := range anc {
-					if a == rn {
-						log.Printf("[WARN] Not adding fixup edge %q->%q which introduces a cycle", dag.VertexName(rn), dag.VertexName(dest))
-						cycle = true
-						break
-					}
-				}
-				if cycle {
-					continue
-				}
-
-				log.Printf("[DEBUG] adding fixup edge %q->%q to prevent destroy node evaluation", dag.VertexName(rn), dag.VertexName(dest))
-				g.Connect(dag.BasicEdge(rn, dest))
-			}
-		}
-	}
-
-	return nil
 }
