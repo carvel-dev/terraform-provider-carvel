@@ -27,7 +27,7 @@ terraform {
   required_providers {
     carvel = {
       source  = "vmware-tanzu/carvel"
-      version = "0.10.0" // or pick version (started publishing v0.10.0+)
+      version = "0.11.0" // or pick version (started publishing v0.10.0+)
     }
   }
 }
