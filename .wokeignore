@@ -1,0 +1,8 @@
+# out of our control
+vendor/
+
+# we should fix - https://github.com/vmware-tanzu/terraform-provider-carvel/issues/31
+# .wokeignore is included until we fix the below filename
+.wokeignore
+examples/guestbook/ytt-config/redis-slave.yaml
+examples/guestbook/ytt-config/guestbook-all-in-one.yaml
