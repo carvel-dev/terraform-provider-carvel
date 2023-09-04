@@ -80,7 +80,7 @@ func (t *Kapp) Diff() (string, string, error) {
 
 	if err == nil {
 		return "", stderrStr, fmt.Errorf("Executing kapp: Expected "+
-			"non-0 exit code (stderr: %s)", err, stderrStr)
+			"non-0 exit code (stderr: %s)", stderrStr)
 	}
 
 	if exitError, ok := err.(*goexec.ExitError); ok {
