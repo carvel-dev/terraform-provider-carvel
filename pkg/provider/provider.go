@@ -1,6 +1,9 @@
 package provider
 
 import (
+	"os"
+	"path/filepath"
+
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/terraform"
 	"github.com/vmware-tanzu/terraform-provider-carvel/pkg/kapp"
@@ -11,7 +14,7 @@ import (
 )
 
 func Provider() terraform.ResourceProvider {
-	logger := logger.MustNewFileRoot("/tmp/terraform-provider-carvel.log")
+	logger := logger.MustNewFileRoot(filepath.Join(os.TempDir(), "terraform-provider-carvel.log"))
 	yttLogger := logger.WithLabel("ytt")
 	kbldLogger := logger.WithLabel("kbld")
 
